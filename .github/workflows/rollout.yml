@@ -1,0 +1,25 @@
+name: Rollout
+on:
+  push:
+    branches:
+      - main
+jobs:
+  rollout:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+      - name: Initialize Terraform
+        run: terraform init
+        working-directory: terraform/
+      - name: Apply Terraform
+        run: terraform apply -auto-approve
+        working-directory: terraform/
+      - name: Set up Ansible
+        uses: dawidd6/action-ansible-playbook@v2
+      - name: Run Ansible Playbook
+        uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ansible/playbook.yml

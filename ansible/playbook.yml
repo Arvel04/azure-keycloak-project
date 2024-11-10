@@ -1,0 +1,7 @@
+- hosts: webserver
+  become: true
+  roles:
+    - common
+    - docker
+    - keycloak
+    - webserver

@@ -1,0 +1,6 @@
+- name: Run Nginx container
+  docker_container:
+    name: nginx
+    image: custom-nginx
+    ports:
+      - "80:80"
