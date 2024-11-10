@@ -1,7 +1,8 @@
 # .github/workflows/configure.yml
 name: Configure Resources
+# manuel via interface GitHub Actions
 on:
-  workflow_dispatch: # Manual from GitHub Actions interface
+  workflow_dispatch:
 
 jobs:
   configure:
@@ -14,6 +15,10 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
 
+      - name: Refresh Terraform state
+        run: terraform refresh
+        working-directory: terraform/
+        
       - name: Initialize Terraform
         run: terraform init
         working-directory: terraform/
@@ -24,6 +29,8 @@ jobs:
 
       - name: Set up Ansible
         uses: dawidd6/action-ansible-playbook@v2
+        with:
+          playbook: ansible/playbook.yml
 
       - name: Run Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
