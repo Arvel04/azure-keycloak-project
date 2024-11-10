@@ -1,5 +1,1 @@
 .connection.env
-.terraform
-terraform/terraform.tfstate
-terraform/terraform.tfstate.backup
-terraform/secureadmin_id_rsa
