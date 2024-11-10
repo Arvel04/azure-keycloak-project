@@ -26,7 +26,7 @@ jobs:
         working-directory: terraform/
 
       - name: Import existing resource group
-        run: terraform import azurerm_resource_group.rg /subscriptions/${{ secrets.ARM_SUBSCRIPTION_ID }}/resourceGroups/my-first-terraform-RG
+        run: terraform import azurerm_resource_group.rg /subscriptions/8dd65d24-6fce-49ec-9926-c8ada2abaf3c/resourceGroups/my-first-terraform-RG
         working-directory: terraform/
 
       - name: Apply Terraform
