@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+
 jobs:
   rollout:
     runs-on: ubuntu-latest
@@ -25,22 +26,12 @@ jobs:
           echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
         working-directory: terraform/
 
-      - name: Import existing resource group
-        run: terraform import azurerm_resource_group.rg /subscriptions/${{ secrets.ARM_SUBSCRIPTION_ID }}/resourceGroups/my-first-terraform-RG
+      # Étape pour détruire les ressources existantes
+      - name: Destroy Infrastructure
+        run: terraform destroy -auto-approve
         working-directory: terraform/
 
-      - name: Import Virtual Network
-        run: terraform import azurerm_virtual_network.my_terraform_network /subscriptions/${{ secrets.ARM_SUBSCRIPTION_ID }}/resourceGroups/my-first-terraform-RG/providers/Microsoft.Network/virtualNetworks/my-first-terraform-network
-        working-directory: terraform/
-
-      - name: Import Public IP Address
-        run: terraform import azurerm_public_ip.my_terraform_public_ip /subscriptions/${{ secrets.ARM_SUBSCRIPTION_ID }}/resourceGroups/my-first-terraform-RG/providers/Microsoft.Network/publicIPAddresses/my-first-terraform-PublicIP
-        working-directory: terraform/
-
-      - name: Import Network Security Group
-        run: terraform import azurerm_network_security_group.my_terraform_nsg /subscriptions/${{ secrets.ARM_SUBSCRIPTION_ID }}/resourceGroups/my-first-terraform-RG/providers/Microsoft.Network/networkSecurityGroups/my-first-terraform-NSG
-        working-directory: terraform/  
-
+      # Appliquer les modifications Terraform
       - name: Apply Terraform
         run: terraform apply -auto-approve
         working-directory: terraform/
