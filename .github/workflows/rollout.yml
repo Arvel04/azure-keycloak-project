@@ -11,6 +11,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Debug - List files
+        run: ls -R   # Lister tous les répertoires pour vérifier le contexte
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
 
@@ -30,21 +33,14 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: terraform/
 
-      # Sauvegarder l'adresse IP de la VM dans un fichier JSON dans le répertoire terraform
+      # Sauvegarder l'adresse IP de la VM dans un fichier JSON
       - name: Save VM IP address to JSON file
-        run: terraform output -json > terraform/vm_ip.json
+        run: terraform output -json > ansible/vm_ip.json
         working-directory: terraform/
 
-      # Copier le fichier vm_ip.json dans le répertoire ansible
-      - name: Copy IP JSON file to ansible directory
-        run: cp terraform/vm_ip.json ansible/vm_ip.json
-
-      # Générer l'inventaire dynamique avec le script Python
       - name: Generate dynamic inventory
-        run: |
-          python3 ansible/dynamic_inventory.py
+        run: python3 ansible/dynamic_inventory.py
 
-      # Exécuter Ansible avec l'inventaire dynamique généré
       - name: Run Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
