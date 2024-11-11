@@ -35,7 +35,7 @@ jobs:
 
       # Sauvegarder l'adresse IP de la VM dans un fichier JSON
       - name: Save VM IP address to JSON file
-        run: terraform output -json > ansible/vm_ip.json
+        run: terraform output -json > $GITHUB_WORKSPACE/ansible/vm_ip.json
         working-directory: terraform/
 
       - name: Generate dynamic inventory
