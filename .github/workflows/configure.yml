@@ -35,6 +35,9 @@ jobs:
           echo "::set-output name=vm_ip::$(terraform output -raw public_ip_address)"
         working-directory: terraform/
 
+      - name: Create SSH directory
+        run: mkdir -p ~/.ssh
+      
       - name: Create SSH key file
         env:
           ANSIBLE_SSH_PRIVATE_KEY: ${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}
