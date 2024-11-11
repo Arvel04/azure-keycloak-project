@@ -1,4 +1,28 @@
-- name: Update all packages
+- name: Update apt cache
   apt:
     update_cache: yes
-    upgrade: dist
+
+- name: Install required packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+      - lsb-release
+    state: present
+
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+
+- name: Add Docker Group
+  group:
+    name: docker
+    state: present
+
+- name: Add user to Docker group
+  user:
+    name: "{{ ansible_user }}"
+    group: docker

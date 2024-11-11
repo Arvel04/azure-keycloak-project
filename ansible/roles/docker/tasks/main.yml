@@ -1,9 +1,42 @@
-- name: Install Docker
-  apt:
-    name: docker.io
-    state: present
-- name: Start Docker
-  service:
-    name: docker
-    state: started
-    enabled: true
+- name: Run PostgreSQL container
+  docker_container:
+    name: postgres
+    image: postgres:13
+    env:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password123
+    restart_policy: always
+    ports:
+      - "5432:5432"
+    networks:
+      - keycloak_network
+
+- name: Run Keycloak container
+  docker_container:
+    name: keycloak
+    image: jboss/keycloak:latest
+    env:
+      DB_VENDOR: postgres
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: password123
+    restart_policy: always
+    ports:
+      - "8080:8080"
+    networks:
+      - keycloak_network
+
+- name: Run Nginx container
+  docker_container:
+    name: nginx
+    image: nginx:latest
+    restart_policy: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./static:/usr/share/nginx/html
+    networks:
+      - keycloak_network

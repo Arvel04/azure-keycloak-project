@@ -1,15 +1,11 @@
-- name: Run PostgreSQL container
-  docker_container:
-    name: postgres
-    image: postgres
-    env:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: password123
-    ports:
-      - "5432:5432"
+- name: Wait for PostgreSQL to be ready
+  wait_for:
+    host: localhost
+    port: 5432
+    state: started
+    delay: 10
 
-- name: Run Keycloak container
+- name: Configure Keycloak DB
   docker_container:
     name: keycloak
     image: jboss/keycloak
@@ -19,5 +15,5 @@
       DB_DATABASE: keycloak
       DB_USER: keycloak
       DB_PASSWORD: password123
-    ports:
-      - "8080:8080"
+    restart_policy: always
+    state: started

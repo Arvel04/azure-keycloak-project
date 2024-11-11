@@ -1,6 +1,7 @@
 # .github/workflows/configure.yml
+
 name: Configure Resources
-# manuel via interface GitHub Actions
+# Manuel via interface GitHub Actions
 on:
   workflow_dispatch:
 
@@ -12,34 +13,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Authenticate with Azure
-        run: |
-          echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
-
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Refresh Terraform state
-        run: terraform refresh
-        working-directory: terraform/
-        
       - name: Initialize Terraform
         run: terraform init
         working-directory: terraform/
 
-      - name: Apply Terraform configuration
-        run: terraform apply -auto-approve
+      # Récupérer l'adresse IP de la VM et l'enregistrer dans un fichier JSON
+      - name: Save VM IP address to JSON file
+        run: terraform output -json > vm_ip.json
         working-directory: terraform/
 
+      # Copier l'adresse IP de la VM dans le répertoire ansible
+      - name: Copy IP JSON file
+        run: cp terraform/vm_ip.json ansible/vm_ip.json
+
+      # Configurer Ansible avec l'inventaire dynamique
       - name: Set up Ansible
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: ansible/playbook.yml
 
+      # Exécuter le playbook Ansible
       - name: Run Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
+          inventory: ansible/dynamic_inventory.py  # Utilisation de l'inventaire dynamique
           playbook: ansible/playbook.yml

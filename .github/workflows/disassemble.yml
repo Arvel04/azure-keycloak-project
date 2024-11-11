@@ -1,17 +1,23 @@
 name: Disassemble
 on:
   workflow_dispatch:
+
 jobs:
   destroy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
+
       - name: Initialize Terraform
         run: terraform init
         working-directory: terraform/
+
+      # Détruire les ressources créées par Terraform
       - name: Destroy Terraform resources
         run: terraform destroy -auto-approve
         working-directory: terraform/

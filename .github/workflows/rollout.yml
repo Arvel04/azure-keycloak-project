@@ -31,12 +31,22 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: terraform/
 
+      # Récupérer l'adresse IP de la VM et l'enregistrer dans un fichier JSON
+      - name: Save VM IP address to JSON file
+        run: terraform output -json > vm_ip.json
+        working-directory: terraform/
+
+      # Télécharger le fichier d'adresse IP pour l'inventaire dynamique
+      - name: Copy IP JSON file
+        run: cp terraform/vm_ip.json ansible/vm_ip.json
+
       - name: Set up Ansible
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: ansible/playbook.yml
-          
+      # Exécuter Ansible avec l'inventaire dynamique basé sur l'adresse IP extraite
       - name: Run Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
+          inventory: ansible/dynamic_inventory.py  # Fichier inventaire dynamique
           playbook: ansible/playbook.yml
