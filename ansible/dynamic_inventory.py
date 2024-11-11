@@ -3,15 +3,26 @@ import os
 import json
 
 # Vérifier si le fichier JSON existe
-if not os.path.exists("ansible/vm_ip.json"):
-    print("Erreur : Le fichier vm_ip.json est manquant.")
+file_path = "ansible/vm_ip.json"
+if not os.path.exists(file_path):
+    print(f"Erreur : Le fichier {file_path} est manquant.")
     exit(1)
 
 # Charger les informations d'IP de la VM
-with open("ansible/vm_ip.json") as f:
+with open(file_path) as f:
     try:
-        data = json.load(f)
-        ip_address = data["vm_ip_address"]["value"]
+        # Vérifiez d'abord si le fichier contient des données
+        file_content = f.read()
+        if not file_content:
+            print(f"Erreur : Le fichier {file_path} est vide.")
+            exit(1)
+        
+        # Chargez le contenu JSON
+        data = json.loads(file_content)
+        ip_address = data["public_ip_address"]["value"]
+    except json.JSONDecodeError as e:
+        print(f"Erreur de décodage JSON : {e}")
+        exit(1)
     except KeyError as e:
         print(f"Erreur : Clé manquante dans le fichier JSON : {e}")
         exit(1)
