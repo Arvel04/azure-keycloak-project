@@ -32,7 +32,8 @@ jobs:
       - name: Get VM IP from Terraform output
         id: get_ip
         run: |
-          echo "::set-output name=vm_ip::$(terraform output -raw public_ip_address)"
+          # Capture the VM IP and save it as an environment variable
+          echo "VM_IP=$(terraform output -raw public_ip_address)" >> $GITHUB_ENV
         working-directory: terraform/
 
       - name: Create SSH directory
@@ -44,15 +45,17 @@ jobs:
         run: |
           echo "${ANSIBLE_SSH_PRIVATE_KEY}" > ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
-      
+
       - name: Create Static Inventory with VM IP
-        env:
-          VM_IP: ${{ steps.get_ip.outputs.vm_ip }}
         run: |
+          # Ensure the path to 'hosts' is correct with $GITHUB_WORKSPACE
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
           echo "$VM_IP ansible_user=azureuser ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
         working-directory: ansible/
       
+      - name: Debug the created inventory
+        run: cat $GITHUB_WORKSPACE/ansible/hosts
+
       - name: Run Ansible Playbook with Static Inventory
         uses: dawidd6/action-ansible-playbook@v2
         with:
