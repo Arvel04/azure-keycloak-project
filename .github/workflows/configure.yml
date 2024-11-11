@@ -1,7 +1,4 @@
-# .github/workflows/configure.yml
-
 name: Configure Resources
-
 on:
   workflow_dispatch:
 
@@ -20,19 +17,41 @@ jobs:
         run: terraform init
         working-directory: terraform/
 
-      # Récupérer l'adresse IP de la VM et l'enregistrer dans un fichier JSON
-      - name: Save VM IP address to JSON file
-        run: terraform output -json > ansible/vm_ip.json
+      - name: Authenticate with Azure
+        run: |
+          echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
         working-directory: terraform/
 
-      # Générer l'inventaire dynamique pour Ansible
-      - name: Generate dynamic inventory
-        run: |
-          python3 ansible/dynamic_inventory.py
+      - name: Apply Terraform to create VM
+        run: terraform apply -auto-approve
+        working-directory: terraform/
 
-      # Exécuter le playbook Ansible avec l'inventaire dynamique
-      - name: Run Ansible Playbook
+      - name: Get VM IP from Terraform output
+        id: get_ip
+        run: |
+          echo "::set-output name=vm_ip::$(terraform output -raw public_ip_address)"
+        working-directory: terraform/
+
+      - name: Create SSH key file
+        env:
+          ANSIBLE_SSH_PRIVATE_KEY: ${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}
+        run: |
+          echo "${ANSIBLE_SSH_PRIVATE_KEY}" > ~/.ssh/id_ansible_rsa
+          chmod 600 ~/.ssh/id_ansible_rsa
+      
+      - name: Create Static Inventory with VM IP
+        env:
+          VM_IP: ${{ steps.get_ip.outputs.vm_ip }}
+        run: |
+          echo "[webserver]" > ansible/hosts
+          echo "$VM_IP ansible_user=azureuser ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> ansible/hosts
+        working-directory: ansible/
+      
+      - name: Run Ansible Playbook with Static Inventory
         uses: dawidd6/action-ansible-playbook@v2
         with:
           playbook: ansible/playbook.yml
-          inventory: ansible/vm_inventory.json  # Chemin du fichier généré par dynamic_inventory.py
+          inventory: ansible/hosts
