@@ -1,5 +1,5 @@
 - name: Set up container environment
-  hosts: all
+  hosts: webserver
   become: true
   roles:
     - common
