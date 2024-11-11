@@ -1,7 +1,7 @@
 # .github/workflows/configure.yml
 
 name: Configure Resources
-# Manuel via interface GitHub Actions
+
 on:
   workflow_dispatch:
 
@@ -22,22 +22,17 @@ jobs:
 
       # Récupérer l'adresse IP de la VM et l'enregistrer dans un fichier JSON
       - name: Save VM IP address to JSON file
-        run: terraform output -json > vm_ip.json
+        run: terraform output -json > ansible/vm_ip.json
         working-directory: terraform/
 
-      # Copier l'adresse IP de la VM dans le répertoire ansible
-      - name: Copy IP JSON file
-        run: cp terraform/vm_ip.json ansible/vm_ip.json
+      # Générer l'inventaire dynamique pour Ansible
+      - name: Generate dynamic inventory
+        run: |
+          python3 ansible/dynamic_inventory.py
 
-      # Configurer Ansible avec l'inventaire dynamique
-      - name: Set up Ansible
-        uses: dawidd6/action-ansible-playbook@v2
-        with:
-          playbook: ansible/playbook.yml
-
-      # Exécuter le playbook Ansible
+      # Exécuter le playbook Ansible avec l'inventaire dynamique
       - name: Run Ansible Playbook
         uses: dawidd6/action-ansible-playbook@v2
         with:
-          inventory: ansible/dynamic_inventory.py  # Utilisation de l'inventaire dynamique
           playbook: ansible/playbook.yml
+          inventory: ansible/vm_inventory.json  # Chemin du fichier généré par dynamic_inventory.py
