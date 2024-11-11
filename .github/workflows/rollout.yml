@@ -26,15 +26,18 @@ jobs:
           echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
         working-directory: terraform/
 
-      # Appliquer la configuration Terraform pour créer la VM
       - name: Apply Terraform
         run: terraform apply -auto-approve
         working-directory: terraform/
 
-      # Sauvegarder l'adresse IP de la VM dans un fichier JSON
+      # Sauvegarder l'adresse IP de la VM dans un fichier JSON dans le répertoire terraform
       - name: Save VM IP address to JSON file
-        run: terraform output -json > ansible/vm_ip.json
+        run: terraform output -json > terraform/vm_ip.json
         working-directory: terraform/
+
+      # Copier le fichier vm_ip.json dans le répertoire ansible
+      - name: Copy IP JSON file to ansible directory
+        run: cp terraform/vm_ip.json ansible/vm_ip.json
 
       # Générer l'inventaire dynamique avec le script Python
       - name: Generate dynamic inventory
