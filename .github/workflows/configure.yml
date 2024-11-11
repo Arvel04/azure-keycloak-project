@@ -51,7 +51,7 @@ jobs:
         run: |
           # Ensure the path to 'hosts' is correct with $GITHUB_WORKSPACE
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          echo "$VM_IP ansible_user=azureuser ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
+          echo "$VM_IP ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
         working-directory: ansible/
       
       - name: Debug the created inventory
