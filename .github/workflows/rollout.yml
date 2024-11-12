@@ -34,7 +34,7 @@ jobs:
       - name: Get VM IP from Terraform output
         id: get_ip
         run: |
-          VM_IP=$(terraform output -raw VM_IP | awk -F'"' '{print $2}')
+          VM_IP=$(terraform output -raw VM_IP | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n 1)
           echo "Extracted VM_IP: $VM_IP"
           echo $VM_IP > $GITHUB_WORKSPACE/vm_ip.txt
         working-directory: terraform/
@@ -58,7 +58,7 @@ jobs:
       - name: Create Static Inventory with VM IP
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          IP_ADDRESS=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
+          IP_ADDRESS=$(cat $GITHUB_WORKSPACE/vm_ip.txt | head -n 1)
           echo "$IP_ADDRESS ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
 
       - name: Debug the created inventory
