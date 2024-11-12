@@ -31,14 +31,10 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: terraform/
 
-      - name: Debug Terraform Output
-        run: terraform output
-        working-directory: terraform/
-
       - name: Get VM IP from Terraform output
         id: get_ip
         run: |
-          VM_IP=$(terraform output -raw public_ip_address)
+          VM_IP=$(terraform output -raw VM_IP)
           echo "Extracted VM_IP: $VM_IP"
           echo $VM_IP > $GITHUB_WORKSPACE/vm_ip.txt
         working-directory: terraform/
