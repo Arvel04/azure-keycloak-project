@@ -1,9 +1,3 @@
-resource "azurerm_resource_group" "rg" {
-  location = var.resource_group_location
-  name     = "my-first-terraform-RG"  
-}
-
-# Compte de stockage pour le backend Terraform
 resource "azurerm_storage_account" "tf_state_storage" {
   name                     = "arvel04"                       
   resource_group_name      = "my-first-terraform-RG"         
