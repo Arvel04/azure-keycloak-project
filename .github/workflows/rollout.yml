@@ -48,6 +48,9 @@ jobs:
           echo "${ANSIBLE_SSH_PRIVATE_KEY}" > ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
 
+      - name: Debug VM IP
+        run: echo "VM IP is ${{ env.VM_IP }}"
+
       - name: Create Static Inventory with VM IP
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
@@ -61,5 +64,3 @@ jobs:
         with:
           playbook: ansible/playbook.yml
           inventory: $GITHUB_WORKSPACE/ansible/hosts
-        env:
-          VM_IP: ${{ env.VM_IP }}
