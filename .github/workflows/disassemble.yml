@@ -24,6 +24,10 @@ jobs:
         run: terraform init
         working-directory: terraform/
 
+      - name: Show Terraform state before destroy
+        run: terraform show
+        working-directory: terraform/  
+
       - name: Destroy Terraform resources
         run: terraform destroy -auto-approve
         working-directory: terraform/
