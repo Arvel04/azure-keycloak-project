@@ -34,7 +34,7 @@ jobs:
       - name: Get VM IP from Terraform output
         id: get_ip
         run: |
-          VM_IP=$(terraform output -raw VM_IP)
+          VM_IP=$(terraform output -raw VM_IP | grep -oP '(\d{1,3}\.){3}\d{1,3}')
           echo "Extracted VM_IP: $VM_IP"
           echo $VM_IP > $GITHUB_WORKSPACE/vm_ip.txt
         working-directory: terraform/
