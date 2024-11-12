@@ -20,13 +20,13 @@ jobs:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
-      - name: Initialize Terraform
-        run: terraform init
+      - name: Initialize Terraform with Backend
+        run: terraform init -backend-config="terraform/backend.tfvars" # Utilisation du fichier backend.tfvars
         working-directory: terraform/
 
       - name: Show Terraform state before destroy
         run: terraform show
-        working-directory: terraform/  
+        working-directory: terraform/
 
       - name: Destroy Terraform resources
         run: terraform destroy -auto-approve

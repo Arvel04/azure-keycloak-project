@@ -1,8 +1,40 @@
 resource "azurerm_resource_group" "rg" {
   location = var.resource_group_location
-  name     = "my-first-terraform-RG"
+  name     = "my-first-terraform-RG"  
 }
 
+# Compte de stockage pour le backend Terraform
+resource "azurerm_storage_account" "tf_state_storage" {
+  name                     = "arvel04"                       
+  resource_group_name      = "my-first-terraform-RG"         
+  location                 = azurerm_resource_group.rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  allow_blob_public_access = false
+
+  lifecycle {
+    prevent_destroy = true  # Pour éviter la suppression accidentelle
+  }
+}
+
+# Conteneur de stockage pour l'état Terraform
+resource "azurerm_storage_container" "tf_state_container" {
+  name                  = "tfstate"                          # Nom spécifique
+  storage_account_name  = azurerm_storage_account.tf_state_storage.name
+  container_access_type = "private"
+}
+
+# Configuration du backend distant pour Terraform
+terraform {
+  backend "azurerm" {
+    resource_group_name   = var.resource_group_name
+    storage_account_name  = var.storage_account_name
+    container_name        = var.container_name
+    key                   = var.key
+  }
+}
+
+# Autres ressources Terraform (réseau, machine virtuelle, etc.)
 resource "azurerm_virtual_network" "my_terraform_network" {
   name                = "my-first-terraform-network"
   address_space       = ["10.0.0.0/16"]
