@@ -34,12 +34,8 @@ jobs:
       - name: Get VM IP from Terraform output
         id: get_ip
         run: |
-          # Extraire l'IP en utilisant -raw avec une redirection pour éliminer les erreurs ou messages de débogage
-          VM_IP=$(terraform output -raw public_ip_address 2>/dev/null)
-          if [[ -z "$VM_IP" ]]; then
-            echo "Failed to retrieve IP address." >&2
-            exit 1
-          fi
+          # Extraire l'IP sans guillemets ni autres caractères indésirables
+          VM_IP=$(terraform output -raw public_ip_address | awk -F'"' '{print $2}')
           echo "VM_IP=$VM_IP" >> $GITHUB_ENV
         working-directory: terraform/
 
