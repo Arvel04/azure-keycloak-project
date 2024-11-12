@@ -35,15 +35,14 @@ jobs:
         id: get_ip
         run: |
           VM_IP=$(terraform output -raw public_ip_address | awk -F'"' '{print $2}')
-          echo "VM_IP=$VM_IP" > $GITHUB_ENV/vm_ip.txt
           echo "VM_IP=$VM_IP" >> $GITHUB_ENV
         working-directory: terraform/
 
       - name: Export VM IP to environment file
-        run: echo "VM_IP=$(cat $GITHUB_ENV/vm_ip.txt)" >> $GITHUB_ENV
+        run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
       - name: Debug VM IP
-        run: cat $GITHUB_ENV/vm_ip.txt
+        run: echo "VM IP is ${{ env.VM_IP }}"
 
       - name: Create SSH directory
         run: mkdir -p ~/.ssh
@@ -58,7 +57,7 @@ jobs:
       - name: Create Static Inventory with VM IP
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          echo "$(cat $GITHUB_ENV/vm_ip.txt) ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
+          echo "${{ env.VM_IP }} ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
 
       - name: Debug the created inventory
         run: cat $GITHUB_WORKSPACE/ansible/hosts
