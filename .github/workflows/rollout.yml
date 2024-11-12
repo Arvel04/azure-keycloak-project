@@ -58,7 +58,8 @@ jobs:
       - name: Create Static Inventory with VM IP
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
+          IP_ADDRESS=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
+          echo "$IP_ADDRESS ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
 
       - name: Debug the created inventory
         run: cat $GITHUB_WORKSPACE/ansible/hosts
@@ -68,3 +69,5 @@ jobs:
         with:
           playbook: ansible/playbook.yml
           inventory: $GITHUB_WORKSPACE/ansible/hosts
+        env:
+          VM_IP: ${{ env.VM_IP }}
