@@ -2,8 +2,8 @@ output "resource_group_name" {
   value = "my-first-terraform-RG" 
 }
 
-output "public_ip_address" {
-  value = azurerm_public_ip.my_terraform_public_ip.ip_address
+output "VM_IP" {
+  value = azurerm_public_ip.my_public_ip.ip_address
   description = "The public IP address of the VM"
 }
 
