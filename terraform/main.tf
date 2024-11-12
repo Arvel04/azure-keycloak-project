@@ -1,20 +1,25 @@
-resource "azurerm_storage_account" "tf_state_storage" {
-  name                     = "arvel04"                       
-  resource_group_name      = "my-first-terraform-RG"         
-  location                 = azurerm_resource_group.rg.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-  allow_blob_public_access = false
+# Utilisation du groupe de ressources existant
+#resource "azurerm_resource_group" "rg" {
+  # Cette ressource est désormais inutile, mais vous pouvez la garder en tant que référence si nécessaire
+  # location = var.resource_group_location
+  #name     = "my-first-terraform-RG"  # Nom du groupe de ressources existant
+#}
 
-  lifecycle {
-    prevent_destroy = true  # Pour éviter la suppression accidentelle
-  }
-}
+# Utilisation du compte de stockage existant
+#resource "azurerm_storage_account" "tf_state_storage" {
+  # Cette ressource est désormais inutile, mais vous pouvez la garder si vous avez besoin d'une référence
+  #name                     = "arvel04"
+ # resource_group_name      = "my-first-terraform-RG"  # Nom du groupe de ressources existant
+  #location                 = "East US"  # Spécifiez la même localisation que votre groupe de ressources
+  #account_tier             = "Standard"
+  #account_replication_type = "LRS"
+  #allow_blob_public_access = false
+#}
 
 # Conteneur de stockage pour l'état Terraform
 resource "azurerm_storage_container" "tf_state_container" {
-  name                  = "tfstate"                          # Nom spécifique
-  storage_account_name  = azurerm_storage_account.tf_state_storage.name
+  name                  = "tfstate"
+  storage_account_name  = "arvel04"
   container_access_type = "private"
 }
 
