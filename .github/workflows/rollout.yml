@@ -24,7 +24,7 @@ jobs:
         working-directory: terraform/
 
       - name: Initialize Terraform with Backend
-        run: terraform init -reconfigure -backend-config="${GITHUB_WORKSPACE}/terraform/backend.tfvars"
+        run: terraform init -backend-config="${GITHUB_WORKSPACE}/terraform/backend.tfvars"
         working-directory: terraform/
 
       - name: Apply Terraform to create VM
@@ -34,14 +34,13 @@ jobs:
       - name: Get VM IP from Terraform output
         id: get_ip
         run: |
-          terraform init -reconfigure -backend-config="${GITHUB_WORKSPACE}/terraform/backend.tfvars"
           VM_IP=$(terraform output -raw public_ip_address)
           echo "VM_IP=$VM_IP" >> $GITHUB_ENV
-          echo "VM_IP=$VM_IP" >> $GITHUB_WORKSPACE/vm_ip.txt
+          echo $VM_IP > vm_ip.txt
         working-directory: terraform/
 
-      - name: Export VM IP to environment file
-        run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
+      - name: Load VM IP into environment
+        run: echo "VM_IP=$(cat terraform/vm_ip.txt)" >> $GITHUB_ENV
 
       - name: Create SSH directory
         run: mkdir -p ~/.ssh
