@@ -1,4 +1,4 @@
-# Utilisation du groupe de ressources existant
+# wurde Manuel erstellt
 #resource "azurerm_resource_group" "rg" {
   # Cette ressource est désormais inutile, mais vous pouvez la garder en tant que référence si nécessaire
   # location = var.resource_group_location
@@ -7,7 +7,7 @@
 
 # Utilisation du compte de stockage existant
 #resource "azurerm_storage_account" "tf_state_storage" {
-  # Cette ressource est désormais inutile, mais vous pouvez la garder si vous avez besoin d'une référence
+  #Cette ressource est désormais inutile, mais vous pouvez la garder si vous avez besoin d'une référence
   #name                     = "arvel04"
  # resource_group_name      = "my-first-terraform-RG"  # Nom du groupe de ressources existant
   #location                 = "East US"  # Spécifiez la même localisation que votre groupe de ressources
@@ -38,31 +38,31 @@ terraform {
 resource "azurerm_virtual_network" "my_terraform_network" {
   name                = "my-first-terraform-network"
   address_space       = ["10.0.0.0/16"]
-  location            = "West Europe"  # Utilisation de l'emplacement existant
-  resource_group_name = "my-first-terraform-RG"  # Utilisation du groupe de ressources existant
+  location            = "West Europe"  
+  resource_group_name = "my-first-terraform-RG"  
 }
 
 # Sous-réseau
 resource "azurerm_subnet" "my_terraform_subnet" {
   name                 = "my-first-terraform-subnet"
-  resource_group_name  = "my-first-terraform-RG"  # Utilisation du groupe de ressources existant
+  resource_group_name  = "my-first-terraform-RG"  
   virtual_network_name = azurerm_virtual_network.my_terraform_network.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-# IP publique
+# IP public
 resource "azurerm_public_ip" "my_terraform_public_ip" {
   name                = "my-first-terraform-PublicIP"
-  location            = "West Europe"  # Utilisation de l'emplacement existant
-  resource_group_name = "my-first-terraform-RG"  # Utilisation du groupe de ressources existant
+  location            = "West Europe"  
+  resource_group_name = "my-first-terraform-RG"  
   allocation_method   = "Dynamic"
 }
 
-# Groupe de sécurité réseau (NSG)
+# sécurityGroup réseau (NSG)
 resource "azurerm_network_security_group" "my_terraform_nsg" {
   name                = "my-first-terraform-NSG"
-  location            = "West Europe"  # Utilisation de l'emplacement existant
-  resource_group_name = "my-first-terraform-RG"  # Utilisation du groupe de ressources existant
+  location            = "West Europe" 
+  resource_group_name = "my-first-terraform-RG"  
 
   security_rule {
     name                       = "SSH"
@@ -80,8 +80,8 @@ resource "azurerm_network_security_group" "my_terraform_nsg" {
 # Interface réseau (NIC)
 resource "azurerm_network_interface" "my_terraform_nic" {
   name                = "my-first-terraform-nic"
-  location            = "West Europe"  # Utilisation de l'emplacement existant
-  resource_group_name = "my-first-terraform-RG"  # Utilisation du groupe de ressources existant
+  location            = "West Europe"  
+  resource_group_name = "my-first-terraform-RG"  
 
   ip_configuration {
     name                          = "my-nic-configuration"
@@ -106,8 +106,8 @@ resource "tls_private_key" "secureadmin_ssh" {
 # Machine virtuelle Linux
 resource "azurerm_linux_virtual_machine" "my_terraform_vm" {
   name                  = "my-terraform-vm"
-  location              = "West Europe"  # Utilisation de l'emplacement existant
-  resource_group_name   = "my-first-terraform-RG"  # Utilisation du groupe de ressources existant
+  location              = "West Europe"  
+  resource_group_name   = "my-first-terraform-RG"  
   network_interface_ids = [azurerm_network_interface.my_terraform_nic.id]
   size                  = "Standard_DS1_v2"
 
