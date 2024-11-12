@@ -21,7 +21,7 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
       - name: Initialize Terraform with Backend
-        run: terraform init -backend-config="terraform/backend.tfvars" # Utilisation du fichier backend.tfvars
+        run: terraform init -backend-config="${GITHUB_WORKSPACE}/terraform/backend.tfvars" # Utilisation du fichier backend.tfvars
         working-directory: terraform/
 
       - name: Show Terraform state before destroy

@@ -16,7 +16,7 @@ jobs:
         uses: hashicorp/setup-terraform@v1
 
       - name: Initialize Terraform with Backend
-        run: terraform init -backend-config="terraform/backend.tfvars" 
+        run: terraform init -backend-config="${GITHUB_WORKSPACE}/terraform/backend.tfvars" 
         working-directory: terraform/
 
       - name: Authenticate with Azure
