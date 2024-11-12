@@ -50,13 +50,14 @@ jobs:
           chmod 600 ~/.ssh/id_ansible_rsa
           
       - name: Debug VM IP
-        run: echo "VM IP is $VM_IP"    
+        run: cat $GITHUB_WORKSPACE/ansible/hosts    
 
       - name: Create Static Inventory with VM IP
         run: |
-          # Ensure the path to 'hosts' is correct with $GITHUB_WORKSPACE
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          echo "${{ env.VM_IP }} ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
+          echo "$VM_IP ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
+        env:
+          VM_IP: ${{ env.VM_IP }}
         working-directory: ansible/
 
       - name: Debug the created inventory
@@ -67,3 +68,5 @@ jobs:
         with:
           playbook: ansible/playbook.yml
           inventory: $GITHUB_WORKSPACE/ansible/hosts
+        env:
+          VM_IP: ${{ env.VM_IP }}  
