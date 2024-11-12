@@ -17,11 +17,11 @@
 #}
 
 # Conteneur de stockage pour l'état Terraform
-resource "azurerm_storage_container" "tf_state_container" {
-  name                  = "tfstate"
-  storage_account_name  = "arvel04"
-  container_access_type = "private"
-}
+#resource "azurerm_storage_container" "tf_state_container" {
+#  name                  = "tfstate"
+#  storage_account_name  = "arvel04"
+#  container_access_type = "private"
+#}
 
 # Configuration du backend distant pour Terraform
 terraform {
