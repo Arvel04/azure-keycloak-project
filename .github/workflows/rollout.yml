@@ -74,14 +74,14 @@ jobs:
       - name: Debug the created inventory
         run: cat $GITHUB_WORKSPACE/ansible/hosts
 
-      # Étape pour installer Python et Ansible sur la VM
-      - name: Update Python and install Ansible on VM
+      # Étape pour installer Python et Ansible 2.9.0 sur la VM
+      - name: Update Python and install Ansible 2.9.0 on VM
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             sudo apt update -y
             sudo apt upgrade -y
             sudo apt install python3-pip python3-dev build-essential libssl-dev libffi-dev python3-setuptools -y
-            sudo pip3 install --upgrade pip setuptools ansible cryptography
+            sudo pip3 install ansible==2.9.0
           EOF
 
       # Exécuter le playbook Ansible
