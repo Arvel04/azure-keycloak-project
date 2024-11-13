@@ -50,10 +50,15 @@ jobs:
       - name: Create SSH directory
         run: mkdir -p ~/.ssh
 
-      - name: Configure SSH key for Ansible
+      - name: Check and configure SSH key for Ansible
         run: |
+          # Check if the private key is correctly extracted
+          cat $GITHUB_WORKSPACE/id_ansible_rsa
+          # Move and secure the SSH private key
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
+          # Check SSH permissions for the key
+          ls -l ~/.ssh/id_ansible_rsa
 
       - name: Test SSH Connectivity
         run: ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
