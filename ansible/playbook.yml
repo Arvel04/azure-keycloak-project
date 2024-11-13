@@ -4,7 +4,7 @@
   become: true
   gather_facts: true
   vars:
-    ansible_python_interpreter: /usr/bin/python3  # Indique explicitement le chemin de Python 3
+    ansible_python_interpreter: /usr/bin/python3  # Spécifie explicitement le chemin de Python 3 pour Ansible
 
   tasks:
     - name: Ensure Python 3 is the default interpreter
@@ -22,6 +22,32 @@
     - name: Display Python version
       debug:
         msg: "Python version is {{ python_version.stdout }}"
+
+    - name: Ensure required Python packages are installed
+      pip:
+        name:
+          - setuptools
+          - pip
+          - cryptography
+          - ansible
+        state: present
+        executable: /usr/bin/pip3  # Utilisation de pip3
+
+    - name: Ensure Docker is installed (for container environment)
+      apt:
+        name: docker.io
+        state: present
+
+    - name: Ensure Docker service is started
+      service:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Ensure Keycloak is installed
+      apt:
+        name: keycloak
+        state: present
 
   roles:
     - common

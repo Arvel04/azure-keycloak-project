@@ -61,7 +61,7 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ansible_rsa
 
-      # New step: Test SSH Connectivity with verbose output
+      # New step: Test SSH Connectivity
       - name: Test SSH Connectivity
         run: |
           ssh -vvv -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
