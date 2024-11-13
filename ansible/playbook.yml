@@ -67,12 +67,12 @@
     - webserver
 
 handlers:
-  - name: restart docker
-    service:
+    - name: restart docker
+      service:
       name: docker
       state: restarted
 
-  - name: restart keycloak
-    service:
+    - name: restart keycloak
+      service:
       name: keycloak
       state: restarted
