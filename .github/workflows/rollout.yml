@@ -73,8 +73,12 @@ jobs:
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             sudo apt update -y
             sudo apt upgrade -y
-            sudo apt install python3-pip python3-dev -y
-            sudo pip3 install --upgrade ansible
+            sudo apt install python3-pip python3-dev build-essential libssl-dev libffi-dev python3-setuptools -y
+            sudo apt install rustc cargo -y
+            sudo pip3 install --upgrade pip  
+            sudo pip3 install --upgrade setuptools_rust
+            sudo pip3 install --upgrade cryptography
+            sudo pip3 install --upgrade ansible  
           EOF
 
       # Étape pour exécuter le playbook Ansible
