@@ -1,3 +1,4 @@
+# Nom de la pipeline et branche
 name: Rollout
 on:
   push:
@@ -30,14 +31,13 @@ jobs:
       - name: Apply Terraform to create VM
         run: terraform apply -auto-approve
         working-directory: terraform/
-        timeout-minutes: 30  # Timeout augmenté pour l'étape Terraform
+        timeout-minutes: 30
 
       - name: Get VM IP and private key from Terraform output
         id: get_outputs
         run: |
           VM_IP=$(terraform output -raw VM_IP | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n 1)
           PRIVATE_KEY=$(terraform output -raw private_key)
-          echo "Extracted VM_IP: $VM_IP"
           echo "$VM_IP" > $GITHUB_WORKSPACE/vm_ip.txt
           echo "$PRIVATE_KEY" > $GITHUB_WORKSPACE/id_ansible_rsa
         working-directory: terraform/
@@ -45,93 +45,45 @@ jobs:
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
-      - name: Debug VM IP
-        run: echo "VM IP is $(cat $GITHUB_WORKSPACE/vm_ip.txt)"
-
-      - name: Create SSH directory
-        run: mkdir -p ~/.ssh
-
-      - name: Configure SSH key for Ansible
+      - name: Configure SSH for Ansible
         run: |
+          mkdir -p ~/.ssh
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
-
-      - name: Start SSH agent and add key
-        run: |
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ansible_rsa
 
       - name: Test SSH Connectivity
         run: |
-          ssh -vvv -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
-      - name: Create Static Inventory with VM IP
+      - name: Create Inventory
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          IP_ADDRESS=$(cat $GITHUB_WORKSPACE/vm_ip.txt | head -n 1)
-          echo "$IP_ADDRESS ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
+          echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
 
-      - name: Debug the created inventory
-        run: cat $GITHUB_WORKSPACE/ansible/hosts
-
-      # Étape pour désinstaller toute version existante d'Ansible et Python
-      - name: Uninstall existing Python and Ansible
+      # Etape pour désinstaller Ansible et installer Ansible 2.9.0 dans un environnement virtuel
+      - name: Setup Ansible Environment on VM
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            # Désinstallation d'Ansible s'il est installé
-            sudo apt remove --purge ansible -y
-            sudo apt autoremove -y
-            
-            # Désinstallation de Python (si nécessaire)
-            sudo apt remove --purge python3 python3-pip python3-dev -y
-            sudo apt autoremove -y
-
-            # Supprimer tous les fichiers de configuration d'Ansible ou de Python restants
-            sudo rm -rf /etc/ansible
-            sudo rm -rf /usr/bin/ansible
-            sudo rm -rf /usr/lib/python3*
-          EOF
-
-      # Étape pour installer Python 2.7, pip et Ansible 2.9.0 sur la VM
-      - name: Install Python 2.7, pip, and Ansible 2.9.0 on VM
-        run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            # Mise à jour des paquets et installation de Python 2.7
             sudo apt update -y
-            sudo apt upgrade -y
-            sudo apt install python2.7 python2.7-dev python-pip -y
-            sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
-
-            # Réinstaller pip pour Python 2.7
-            curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
-            sudo python get-pip.py
-
-            # Installation d'Ansible 2.9.0 avec Python 2.7
-            sudo pip install ansible==2.9.0 cryptography
+            sudo apt remove --purge ansible -y
+            sudo apt install -y python2.7 python2.7-dev python-pip
+            sudo python2.7 -m pip install virtualenv
+            virtualenv -p python2.7 ~/ansible-env
+            source ~/ansible-env/bin/activate
+            pip install ansible==2.9.0
           EOF
 
-      # Créer un environnement virtuel Python et installer Ansible 2.9.0
-      - name: Set up Python 2.7 virtual environment for Ansible
+      # Copier les fichiers Ansible (playbook et répertoire des rôles) vers la VM
+      - name: Copy Ansible Playbook and Roles
+        run: |
+          scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
+
+      # Exécuter le playbook avec Ansible dans l'environnement virtuel
+      - name: Run Ansible Playbook
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            # Créer un environnement virtuel Python 2.7
-            python2.7 -m venv ~/ansible-env
-            
-            # Activer l'environnement virtuel
             source ~/ansible-env/bin/activate
-            
-            # Installer Ansible 2.9.0 et cryptography
-            pip install ansible==2.9.0 cryptography
-            ansible --version
+            ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
           EOF
-
-      # Exécuter le playbook Ansible avec une sortie détaillée
-      - name: Run Ansible Playbook with verbose output
-        run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            # Activer l'environnement virtuel et exécuter le playbook
-            source ~/ansible-env/bin/activate
-            ansible-playbook -vvv -i $GITHUB_WORKSPACE/ansible/hosts ansible/playbook.yml
-          EOF
-        env:
-          VM_IP: ${{ env.VM_IP }}
