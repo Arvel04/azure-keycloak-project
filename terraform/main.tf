@@ -86,6 +86,7 @@ resource "azurerm_network_interface" "my_terraform_nic" {
   ip_configuration {
     name                          = "my-nic-configuration"
     subnet_id                     = azurerm_subnet.my_terraform_subnet.id
+    private_ip_address            = "10.0.0.4"
     private_ip_address_allocation = "Static"
     public_ip_address_id          = azurerm_public_ip.my_terraform_public_ip.id
   }
