@@ -92,8 +92,8 @@ jobs:
             sudo rm -rf /usr/lib/python3*
           EOF
 
-      # Étape pour installer Python 2.7 et Ansible 2.9.0 sur la VM
-      - name: Install Python 2.7 and Ansible 2.9.0 on VM
+      # Étape pour installer Python 2.7, pip et Ansible 2.9.0 sur la VM
+      - name: Install Python 2.7, pip, and Ansible 2.9.0 on VM
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             # Mise à jour des paquets et installation de Python 2.7
@@ -102,14 +102,15 @@ jobs:
             sudo apt install python2.7 python2.7-dev python-pip -y
             sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
 
-            # Installation des dépendances nécessaires
-            sudo apt install build-essential libssl-dev libffi-dev python2.7-setuptools -y
+            # Réinstaller pip pour Python 2.7
+            curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
+            sudo python get-pip.py
 
             # Installation d'Ansible 2.9.0 avec Python 2.7
             sudo pip install ansible==2.9.0 cryptography
           EOF
 
-      # Exécuter le playbook Ansible en forçant l'utilisation de Python 2.7
+      # Exécuter le playbook Ansible avec une sortie détaillée
       - name: Run Ansible Playbook with verbose output
         run: |
           ansible-playbook -vvv -i $GITHUB_WORKSPACE/ansible/hosts ansible/playbook.yml
