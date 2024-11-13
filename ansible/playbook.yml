@@ -2,9 +2,7 @@
 - name: Set up container environment
   hosts: webserver
   become: true
-  gather_facts: true
-  vars:
-    ansible_python_interpreter: /usr/bin/python3  # Spécifie explicitement le chemin de Python 3 pour Ansible
+  gather_facts: false  # Désactivation de la collecte automatique
 
   roles:
     - common
@@ -13,57 +11,7 @@
     - webserver
 
   tasks:
-    - name: Ensure Python 3 is the default interpreter
-      command: update-alternatives --install /usr/bin/python3 python /usr/bin/python3 1
-
-    - name: Ensure pip3 for Python 3 is installed
-      apt:
-        name: python3-pip
-        state: present
-
-    - name: Ensure required Python packages are installed
-      pip:
-        name:
-          - setuptools
-          - pip
-          - cryptography
-          - ansible
-        state: present
-        executable: /usr/bin/pip3  # Utilisation de pip3
-
-    - name: Ensure Docker is installed (for container environment)
-      apt:
-        name: docker.io
-        state: present
-
-    - name: Ensure Docker service is started
-      service:
-        name: docker
-        state: started
-        enabled: true
-      notify:
-        - restart docker
-
-    - name: Ensure Keycloak is installed
-      apt:
-        name: keycloak
-        state: present
-
-    - name: Ensure Keycloak service is started
-      service:
-        name: keycloak
-        state: started
-        enabled: true
-      notify:
-        - restart keycloak
-
-  handlers:
-    - name: restart docker
-      service:
-        name: docker
-        state: restarted
-
-    - name: restart keycloak
-      service:
-        name: keycloak
-        state: restarted
+    - name: Collect Ansible facts manually
+      ansible.builtin.setup:  # Utilise le module standard pour la collecte des faits
+        gather_subset:
+          - all
