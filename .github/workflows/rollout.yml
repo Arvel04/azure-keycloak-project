@@ -30,6 +30,7 @@ jobs:
       - name: Apply Terraform to create VM
         run: terraform apply -auto-approve
         working-directory: terraform/
+        timeout-minutes: 30  # Timeout augmenté pour l'étape Terraform
 
       - name: Get VM IP and private key from Terraform output
         id: get_outputs
@@ -55,16 +56,16 @@ jobs:
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
 
-      # New step: Add key to SSH agent
+      # Start SSH agent and add key
       - name: Start SSH agent and add key
         run: |
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ansible_rsa
 
-      # New step: Test SSH Connectivity
+      # Test SSH Connectivity with extended timeout
       - name: Test SSH Connectivity
         run: |
-          ssh -vvv -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+          ssh -vvv -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
       - name: Create Static Inventory with VM IP
         run: |
@@ -75,7 +76,7 @@ jobs:
       - name: Debug the created inventory
         run: cat $GITHUB_WORKSPACE/ansible/hosts
 
-      # Nouvelle étape : Mettre à jour Python et installer Ansible sur la VM
+      # Install Python and Ansible on VM
       - name: Update Python and install Ansible on VM
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
@@ -89,7 +90,7 @@ jobs:
             sudo pip3 install --upgrade ansible  
           EOF
 
-      # Étape pour exécuter le playbook Ansible avec Python Interpreter spécifié dans le playbook
+      # Run Ansible Playbook
       - name: Run Ansible Playbook with verbose output
         run: ansible-playbook -vvv -i $GITHUB_WORKSPACE/ansible/hosts ansible/playbook.yml
         env:
