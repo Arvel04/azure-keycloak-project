@@ -1,23 +1,24 @@
+---
 - name: Set up container environment
   hosts: webserver
   become: true
   gather_facts: true  # Collecte des faits sur la machine cible
 
   vars:
-    ansible_python_interpreter: /usr/bin/python3.6  # Spécifier Python 3.6 explicitement
+    ansible_python_interpreter: /usr/bin/python2.7  # Utilisation de Python 2.7 pour Ansible 2.9.0
 
   tasks:
-    - name: Ensure Python 3 is installed
+    - name: Ensure Python 2.7 is installed
       ansible.builtin.apt:
-        name: python3
+        name: python2.7
         state: present
 
-    - name: Ensure pip for Python 3 is installed
+    - name: Ensure pip for Python 2.7 is installed
       ansible.builtin.apt:
-        name: python3-pip
+        name: python-pip
         state: present
 
-    - name: Install pip if not present
+    - name: Install pip if not present (Python 2.7)
       ansible.builtin.pip:
         name: pip
         executable: "{{ ansible_python_interpreter }} -m pip"
@@ -32,20 +33,18 @@
     - name: Install Python dependencies for Ansible
       ansible.builtin.pip:
         name:
-          - python3-pip
-          - python3-dev
+          - python2.7-pip
+          - python2.7-dev
           - build-essential
           - libssl-dev
           - libffi-dev
-          - python3-setuptools
-          - rustc
-          - cargo
+          - python2.7-setuptools
         executable: "{{ ansible_python_interpreter }} -m pip"
         state: present
 
-    - name: Install Ansible on the VM
+    - name: Install Ansible 2.9.0 on the VM
       ansible.builtin.pip:
-        name: ansible
+        name: ansible==2.9.0
         executable: "{{ ansible_python_interpreter }} -m pip"
         state: present
 
@@ -59,4 +58,19 @@
       ansible.builtin.debug:
         var: ansible_version_output.stdout
 
-    # Additional tasks here, e.g., provisioning software
+    # Ajouter les rôles
+    - name: Include roles for webserver setup
+      ansible.builtin.include_role:
+        name: common
+
+    - name: Include docker role
+      ansible.builtin.include_role:
+        name: docker
+
+    - name: Include keycloak role
+      ansible.builtin.include_role:
+        name: keycloak
+
+    - name: Include webserver role
+      ansible.builtin.include_role:
+        name: webserver
