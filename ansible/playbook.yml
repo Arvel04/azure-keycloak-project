@@ -2,16 +2,78 @@
 - name: Set up container environment
   hosts: webserver
   become: true
-  gather_facts: false  # Désactivation de la collecte automatique
-
-  roles:
-    - common
-    - docker
-    - keycloak
-    - webserver
+  gather_facts: true  # Collecte des faits sur la machine cible
 
   tasks:
-    - name: Collect Ansible facts manually
-      ansible.builtin.setup:  # Utilise le module standard pour la collecte des faits
+    - name: Ensure Python 3.x is installed
+      ansible.builtin.apt:
+        name: python3
+        state: present
+      when: ansible_python_interpreter is not defined  # Si l'interpréteur Python n'est pas défini
+
+    - name: Gather Python facts
+      ansible.builtin.setup:
+        filter: ansible_python_interpreter
+      register: python_facts
+
+    - name: Set the python interpreter dynamically
+      ansible.builtin.set_fact:
+        ansible_python_interpreter: "{{ python_facts.ansible_facts.ansible_python_interpreter }}"
+
+    - name: Ensure pip is installed for the correct Python version
+      ansible.builtin.pip:
+        name: pip
+        executable: "{{ ansible_python_interpreter }} -m pip"
+        state: present
+
+    - name: Install the future module for compatibility
+      ansible.builtin.pip:
+        name: future
+        executable: "{{ ansible_python_interpreter }} -m pip"
+        state: present
+
+    - name: Install Python dependencies for Ansible
+      ansible.builtin.pip:
+        name:
+          - python3-pip
+          - python3-dev
+          - build-essential
+          - libssl-dev
+          - libffi-dev
+          - python3-setuptools
+          - rustc
+          - cargo
+        executable: "{{ ansible_python_interpreter }} -m pip"
+        state: present
+
+    - name: Install Ansible on the VM
+      ansible.builtin.pip:
+        name: ansible
+        executable: "{{ ansible_python_interpreter }} -m pip"
+        state: present
+
+    - name: Run Ansible Roles
+      ansible.builtin.include_role:
+        name: common
+
+    - name: Run Docker setup role
+      ansible.builtin.include_role:
+        name: docker
+
+    - name: Run Keycloak setup role
+      ansible.builtin.include_role:
+        name: keycloak
+
+    - name: Run Webserver setup role
+      ansible.builtin.include_role:
+        name: webserver
+
+    - name: Install additional packages if needed
+      ansible.builtin.apt:
+        name: curl
+        state: present
+
+    - name: Debug final facts
+      ansible.builtin.setup:
         gather_subset:
           - all
