@@ -1,9 +1,28 @@
+---
 - name: Set up container environment
   hosts: webserver
   become: true
   gather_facts: true
   vars:
-    ansible_python_interpreter: /usr/bin/python3
+    ansible_python_interpreter: /usr/bin/python3  # Indique explicitement le chemin de Python 3
+
+  tasks:
+    - name: Ensure Python 3 is the default interpreter
+      command: update-alternatives --install /usr/bin/python3 python /usr/bin/python3 1
+
+    - name: Ensure pip3 for Python 3 is installed
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Check Python version
+      command: python3 --version
+      register: python_version
+
+    - name: Display Python version
+      debug:
+        msg: "Python version is {{ python_version.stdout }}"
+
   roles:
     - common
     - docker
