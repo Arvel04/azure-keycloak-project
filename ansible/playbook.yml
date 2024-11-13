@@ -3,8 +3,9 @@
   hosts: webserver
   become: true
   gather_facts: false  # Désactivation de la collecte automatique
+
   vars:
-    ansible_python_interpreter: /usr/bin/python3  # Spécifier l'utilisation de Python 3
+    ansible_python_interpreter: /usr/bin/python3.9  # Spécifiez la version de Python
 
   roles:
     - common
@@ -13,13 +14,7 @@
     - webserver
 
   tasks:
-    - name: Ensure python3-apt is installed
-      apt:
-        name: python3-apt
-        state: present
-      become: true
-
     - name: Collect Ansible facts manually
-      ansible.builtin.setup:
+      ansible.builtin.setup:  # Utilise le module standard pour la collecte des faits
         gather_subset:
           - all
