@@ -12,3 +12,8 @@ output "tls_private_key" {
   sensitive = true
 }
 
+output "private_key" {
+  value       = tls_private_key.secureadmin_ssh.private_key_pem
+  description = "La clé privée pour l'accès SSH"
+  sensitive   = true
+}
