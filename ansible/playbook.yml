@@ -3,6 +3,8 @@
   hosts: webserver
   become: true
   gather_facts: false  # Désactivation de la collecte automatique
+  vars:
+    ansible_python_interpreter: /usr/bin/python3  # Spécifier l'utilisation de Python 3
 
   roles:
     - common
@@ -18,6 +20,6 @@
       become: true
 
     - name: Collect Ansible facts manually
-      ansible.builtin.setup:  # Utilise le module standard pour la collecte des faits
+      ansible.builtin.setup:
         gather_subset:
           - all
