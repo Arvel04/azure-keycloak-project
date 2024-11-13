@@ -4,9 +4,6 @@
   become: true
   gather_facts: false  # Désactivation de la collecte automatique
 
-  vars:
-    ansible_python_interpreter: /usr/bin/python3.9  # Spécifiez la version de Python
-
   roles:
     - common
     - docker

@@ -56,13 +56,11 @@ jobs:
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
 
-      # Start SSH agent and add key
       - name: Start SSH agent and add key
         run: |
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ansible_rsa
 
-      # Test SSH Connectivity with extended timeout
       - name: Test SSH Connectivity
         run: |
           ssh -vvv -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
@@ -76,21 +74,17 @@ jobs:
       - name: Debug the created inventory
         run: cat $GITHUB_WORKSPACE/ansible/hosts
 
-      # Install Python and Ansible on VM
+      # Étape pour installer Python et Ansible sur la VM
       - name: Update Python and install Ansible on VM
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             sudo apt update -y
             sudo apt upgrade -y
             sudo apt install python3-pip python3-dev build-essential libssl-dev libffi-dev python3-setuptools -y
-            sudo apt install rustc cargo -y
-            sudo pip3 install --upgrade pip  
-            sudo pip3 install --upgrade setuptools_rust
-            sudo pip3 install --upgrade cryptography
-            sudo pip3 install --upgrade ansible  
+            sudo pip3 install --upgrade pip setuptools ansible cryptography
           EOF
 
-      # Run Ansible Playbook
+      # Exécuter le playbook Ansible
       - name: Run Ansible Playbook with verbose output
         run: ansible-playbook -vvv -i $GITHUB_WORKSPACE/ansible/hosts ansible/playbook.yml
         env:
