@@ -1,11 +1,11 @@
 ---
-- name: Set up container environment
+- name: Set up container environment with Python 2.7
   hosts: webserver
   become: true
   gather_facts: true  # Collecte des faits sur la machine cible
 
   vars:
-    ansible_python_interpreter: /usr/bin/python2.7  # Utilisation de Python 2.7 pour Ansible 2.9.0
+    ansible_python_interpreter: /usr/bin/python2.7  # Utiliser explicitement Python 2.7
 
   tasks:
     - name: Ensure Python 2.7 is installed
@@ -21,12 +21,6 @@
     - name: Install pip if not present (Python 2.7)
       ansible.builtin.pip:
         name: pip
-        executable: "{{ ansible_python_interpreter }} -m pip"
-        state: present
-
-    - name: Install future module for compatibility
-      ansible.builtin.pip:
-        name: future
         executable: "{{ ansible_python_interpreter }} -m pip"
         state: present
 
