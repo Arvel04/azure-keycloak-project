@@ -110,9 +110,28 @@ jobs:
             sudo pip install ansible==2.9.0 cryptography
           EOF
 
+      # Créer un environnement virtuel Python et installer Ansible 2.9.0
+      - name: Set up Python 2.7 virtual environment for Ansible
+        run: |
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            # Créer un environnement virtuel Python 2.7
+            python2.7 -m venv ~/ansible-env
+            
+            # Activer l'environnement virtuel
+            source ~/ansible-env/bin/activate
+            
+            # Installer Ansible 2.9.0 et cryptography
+            pip install ansible==2.9.0 cryptography
+            ansible --version
+          EOF
+
       # Exécuter le playbook Ansible avec une sortie détaillée
       - name: Run Ansible Playbook with verbose output
         run: |
-          ansible-playbook -vvv -i $GITHUB_WORKSPACE/ansible/hosts ansible/playbook.yml
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            # Activer l'environnement virtuel et exécuter le playbook
+            source ~/ansible-env/bin/activate
+            ansible-playbook -vvv -i $GITHUB_WORKSPACE/ansible/hosts ansible/playbook.yml
+          EOF
         env:
           VM_IP: ${{ env.VM_IP }}

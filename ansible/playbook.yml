@@ -5,7 +5,7 @@
   gather_facts: true  # Collecte des faits sur la machine cible
 
   vars:
-    ansible_python_interpreter: /usr/bin/python2.7  # Utiliser explicitement Python 2.7
+    ansible_python_interpreter: /usr/local/bin/python2.7  # Spécifier l'interpréteur Python 2.7 (environnement virtuel)
 
   tasks:
     - name: Ensure Python 2.7 is installed
@@ -18,7 +18,7 @@
         name: python-pip
         state: present
 
-    - name: Install pip if not present (Python 2.7)
+    - name: Install pip for Python 2.7 if not present
       ansible.builtin.pip:
         name: pip
         executable: "{{ ansible_python_interpreter }} -m pip"
@@ -52,7 +52,7 @@
       ansible.builtin.debug:
         var: ansible_version_output.stdout
 
-    # Ajouter les rôles
+    # Ajouter les rôles pour configurer le serveur web
     - name: Include roles for webserver setup
       ansible.builtin.include_role:
         name: common
