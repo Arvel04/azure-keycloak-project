@@ -53,10 +53,12 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ansible_rsa
 
-      - name: Clear previous known_hosts entry for VM IP
+      - name: Clear previous known_hosts entry and add VM IP
         run: |
-          ssh-keygen -R "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" || true
-          ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
+          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
+          ssh-keygen -R "$VM_IP" || true  # Suppression de l'ancienne entrée si elle existe
+          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts  # Ajout direct de la clé SSH de la VM
+        shell: bash
 
       - name: Test SSH Connectivity
         run: |
