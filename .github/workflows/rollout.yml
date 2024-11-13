@@ -53,8 +53,10 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ansible_rsa
 
+      # Ajout de la clé SSH de la VM dans le fichier known_hosts
       - name: Retrieve and add VM SSH key to known_hosts
         run: |
+          ssh-keygen -R "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" || true
           ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
 
       - name: Test SSH Connectivity
