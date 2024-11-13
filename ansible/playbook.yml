@@ -11,6 +11,12 @@
     - webserver
 
   tasks:
+    - name: Ensure python3-apt is installed
+      apt:
+        name: python3-apt
+        state: present
+      become: true
+
     - name: Collect Ansible facts manually
       ansible.builtin.setup:  # Utilise le module standard pour la collecte des faits
         gather_subset:
