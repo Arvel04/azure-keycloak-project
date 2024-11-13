@@ -15,14 +15,6 @@
         name: python3-pip
         state: present
 
-    - name: Check Python version
-      command: python3 --version
-      register: python_version
-
-    - name: Display Python version
-      debug:
-        msg: "Python version is {{ python_version.stdout }}"
-
     - name: Ensure required Python packages are installed
       pip:
         name:
@@ -43,14 +35,44 @@
         name: docker
         state: started
         enabled: true
+      notify:
+        - restart docker
 
     - name: Ensure Keycloak is installed
       apt:
         name: keycloak
         state: present
 
+    - name: Ensure Keycloak service is started
+      service:
+        name: keycloak
+        state: started
+        enabled: true
+      notify:
+        - restart keycloak
+
+    - name: Gather facts to retrieve Python version
+      setup:
+        gather_subset:
+          - "python"
+
+    - name: Display Python version
+      debug:
+        msg: "Python version is {{ ansible_python.version }}"
+
   roles:
     - common
     - docker
     - keycloak
     - webserver
+
+handlers:
+  - name: restart docker
+    service:
+      name: docker
+      state: restarted
+
+  - name: restart keycloak
+    service:
+      name: keycloak
+      state: restarted
