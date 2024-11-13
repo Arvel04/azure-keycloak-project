@@ -1,32 +1,29 @@
----
 - name: Set up container environment
   hosts: webserver
   become: true
   gather_facts: true  # Collecte des faits sur la machine cible
 
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.6  # Spécifier Python 3.6 explicitement
+
   tasks:
-    - name: Ensure Python 3.x is installed
+    - name: Ensure Python 3 is installed
       ansible.builtin.apt:
         name: python3
         state: present
-      when: ansible_python_interpreter is not defined  # Si l'interpréteur Python n'est pas défini
 
-    - name: Gather Python facts
-      ansible.builtin.setup:
-        filter: ansible_python_interpreter
-      register: python_facts
+    - name: Ensure pip for Python 3 is installed
+      ansible.builtin.apt:
+        name: python3-pip
+        state: present
 
-    - name: Set the python interpreter dynamically
-      ansible.builtin.set_fact:
-        ansible_python_interpreter: "{{ python_facts.ansible_facts.ansible_python_interpreter }}"
-
-    - name: Ensure pip is installed for the correct Python version
+    - name: Install pip if not present
       ansible.builtin.pip:
         name: pip
         executable: "{{ ansible_python_interpreter }} -m pip"
         state: present
 
-    - name: Install the future module for compatibility
+    - name: Install future module for compatibility
       ansible.builtin.pip:
         name: future
         executable: "{{ ansible_python_interpreter }} -m pip"
@@ -52,28 +49,14 @@
         executable: "{{ ansible_python_interpreter }} -m pip"
         state: present
 
-    - name: Run Ansible Roles
-      ansible.builtin.include_role:
-        name: common
+    - name: Ensure Ansible version is correct
+      ansible.builtin.command:
+        cmd: "{{ ansible_python_interpreter }} -m ansible --version"
+      register: ansible_version_output
+      changed_when: false
 
-    - name: Run Docker setup role
-      ansible.builtin.include_role:
-        name: docker
+    - name: Debug Ansible version
+      ansible.builtin.debug:
+        var: ansible_version_output.stdout
 
-    - name: Run Keycloak setup role
-      ansible.builtin.include_role:
-        name: keycloak
-
-    - name: Run Webserver setup role
-      ansible.builtin.include_role:
-        name: webserver
-
-    - name: Install additional packages if needed
-      ansible.builtin.apt:
-        name: curl
-        state: present
-
-    - name: Debug final facts
-      ansible.builtin.setup:
-        gather_subset:
-          - all
+    # Additional tasks here, e.g., provisioning software
