@@ -6,6 +6,12 @@
   vars:
     ansible_python_interpreter: /usr/bin/python3  # Spécifie explicitement le chemin de Python 3 pour Ansible
 
+  roles:
+    - common
+    - docker
+    - keycloak
+    - webserver
+
   tasks:
     - name: Ensure Python 3 is the default interpreter
       command: update-alternatives --install /usr/bin/python3 python /usr/bin/python3 1
@@ -51,28 +57,13 @@
       notify:
         - restart keycloak
 
-    - name: Gather facts to retrieve Python version
-      setup:
-        gather_subset:
-          - "python"
+  handlers:
+    - name: restart docker
+      service:
+        name: docker
+        state: restarted
 
-    - name: Display Python version
-      debug:
-        msg: "Python version is {{ ansible_python.version }}"
-
-  roles:
-    - common
-    - docker
-    - keycloak
-    - webserver
-
-handlers:
-  - name: restart docker
-    service:
-      name: docker
-      state: restarted
-
-  - name: restart keycloak
-    service:
-      name: keycloak
-      state: restarted
+    - name: restart keycloak
+      service:
+        name: keycloak
+        state: restarted
