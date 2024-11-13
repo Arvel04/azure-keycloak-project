@@ -50,18 +50,21 @@ jobs:
       - name: Create SSH directory
         run: mkdir -p ~/.ssh
 
-      - name: Check and configure SSH key for Ansible
+      - name: Configure SSH key for Ansible
         run: |
-          # Check if the private key is correctly extracted
-          cat $GITHUB_WORKSPACE/id_ansible_rsa
-          # Move and secure the SSH private key
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
-          # Check SSH permissions for the key
-          ls -l ~/.ssh/id_ansible_rsa
 
+      # New step: Add key to SSH agent
+      - name: Start SSH agent and add key
+        run: |
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_ansible_rsa
+
+      # New step: Test SSH Connectivity with verbose output
       - name: Test SSH Connectivity
-        run: ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+        run: |
+          ssh -vvv -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
       - name: Create Static Inventory with VM IP
         run: |
