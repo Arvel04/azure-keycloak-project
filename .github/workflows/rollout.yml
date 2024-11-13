@@ -74,20 +74,44 @@ jobs:
       - name: Debug the created inventory
         run: cat $GITHUB_WORKSPACE/ansible/hosts
 
+      # Étape pour désinstaller toute version existante d'Ansible et Python
+      - name: Uninstall existing Python and Ansible
+        run: |
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            # Désinstallation d'Ansible s'il est installé
+            sudo apt remove --purge ansible -y
+            sudo apt autoremove -y
+            
+            # Désinstallation de Python (si nécessaire)
+            sudo apt remove --purge python3 python3-pip python3-dev -y
+            sudo apt autoremove -y
+
+            # Supprimer tous les fichiers de configuration d'Ansible ou de Python restants
+            sudo rm -rf /etc/ansible
+            sudo rm -rf /usr/bin/ansible
+            sudo rm -rf /usr/lib/python3*
+          EOF
+
       # Étape pour installer Python 2.7 et Ansible 2.9.0 sur la VM
       - name: Install Python 2.7 and Ansible 2.9.0 on VM
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            # Mise à jour des paquets et installation de Python 2.7
             sudo apt update -y
             sudo apt upgrade -y
             sudo apt install python2.7 python2.7-dev python-pip -y
             sudo update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
+
+            # Installation des dépendances nécessaires
             sudo apt install build-essential libssl-dev libffi-dev python2.7-setuptools -y
+
+            # Installation d'Ansible 2.9.0 avec Python 2.7
             sudo pip install ansible==2.9.0 cryptography
           EOF
 
-      # Exécuter le playbook Ansible
+      # Exécuter le playbook Ansible en forçant l'utilisation de Python 2.7
       - name: Run Ansible Playbook with verbose output
-        run: ansible-playbook -vvv -i $GITHUB_WORKSPACE/ansible/hosts ansible/playbook.yml
+        run: |
+          ansible-playbook -vvv -i $GITHUB_WORKSPACE/ansible/hosts ansible/playbook.yml
         env:
           VM_IP: ${{ env.VM_IP }}
