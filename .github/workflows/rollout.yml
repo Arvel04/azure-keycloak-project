@@ -70,10 +70,10 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
-      - name: Create Inventory
+      - name: Create Inventory with SSH Options
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no'" >> $GITHUB_WORKSPACE/ansible/hosts
+          echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'" >> $GITHUB_WORKSPACE/ansible/hosts
 
       # Etape pour désinstaller Ansible et installer Ansible 2.9.0 dans un environnement virtuel
       - name: Setup Ansible Environment on VM
