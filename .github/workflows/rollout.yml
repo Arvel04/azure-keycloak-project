@@ -86,3 +86,8 @@ jobs:
       - name: Run Ansible Playbook
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            source ~/ansible-env/bin/activate
+            ansible -i ~/ansible/hosts webserver -m ping -vvv
+            ANSIBLE_CONFIG=~/ansible/ansible.cfg ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
+          EOF
+        
