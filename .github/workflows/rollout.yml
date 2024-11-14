@@ -59,17 +59,19 @@ jobs:
           eval "$(ssh-agent -s)"
           ssh-add ~/.ssh/id_ansible_rsa
 
-      - name: Clear previous known_hosts entry and add VM IP
+      # Mise à jour de known_hosts
+      - name: Clear and Add VM IP to known_hosts
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          ssh-keygen -R "$VM_IP" || true  # Suppression de l'ancienne entrée si elle existe
-          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts  # Ajout direct de la clé SSH de la VM
+          ssh-keygen -R "$VM_IP" || true  # Supprimer l'ancienne entrée si elle existe
+          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts  # Ajouter l'adresse de la VM
         shell: bash
 
       - name: Test SSH Connectivity
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
+      # Mise à jour du fichier d'inventaire avec ansible_ssh_common_args
       - name: Create Inventory with SSH Options
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
