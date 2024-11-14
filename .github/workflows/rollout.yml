@@ -56,22 +56,20 @@ jobs:
         run: |
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_ansible_rsa
 
-      # Mise à jour de known_hosts
-      - name: Clear and Add VM IP to known_hosts
+      # Ajouter la clé publique de la VM dans known_hosts sans passer par ssh-agent
+      - name: Update known_hosts with VM IP
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
           ssh-keygen -R "$VM_IP" || true  # Supprimer l'ancienne entrée si elle existe
-          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts  # Ajouter l'adresse de la VM
+          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts  # Ajouter la clé SSH
         shell: bash
 
       - name: Test SSH Connectivity
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
-      # Mise à jour du fichier d'inventaire avec ansible_ssh_common_args
+      # Mise à jour du fichier d'inventaire avec ansible_ssh_common_args sans ssh-agent
       - name: Create Inventory with SSH Options
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
