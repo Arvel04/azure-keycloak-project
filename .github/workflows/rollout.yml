@@ -58,7 +58,6 @@ jobs:
       - name: Update known_hosts with VM IP
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          ssh-keygen -R "$VM_IP" || true
           ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
           cat ~/.ssh/known_hosts
         shell: bash
@@ -90,4 +89,3 @@ jobs:
             ansible -i ~/ansible/hosts webserver -m ping -vvv
             ANSIBLE_CONFIG=~/ansible/ansible.cfg ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
           EOF
-        
