@@ -45,11 +45,9 @@ jobs:
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
-      # Préparer le répertoire SSH pour éviter les erreurs de fichier manquant
       - name: Prepare SSH Directory
         run: |
           mkdir -p ~/.ssh
-          touch ~/.ssh/known_hosts  # Crée le fichier si nécessaire
           chmod 600 ~/.ssh/known_hosts
 
       - name: Configure SSH for Ansible
@@ -57,13 +55,11 @@ jobs:
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
 
-      # Ajouter la clé publique de la VM dans known_hosts sans passer par ssh-agent
       - name: Update known_hosts with VM IP
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          ssh-keygen -R "$VM_IP" || true  # Supprimer l'ancienne entrée si elle existe
-          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts  # Ajouter la clé SSH
-          # Affichage du contenu de known_hosts pour vérification
+          ssh-keygen -R "$VM_IP" || true
+          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
           cat ~/.ssh/known_hosts
         shell: bash
 
@@ -71,37 +67,27 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
-      # Mise à jour du fichier d'inventaire avec ansible_ssh_common_args sans ssh-agent
       - name: Create Inventory with SSH Options
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
           echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'" >> $GITHUB_WORKSPACE/ansible/hosts
 
-      # Etape pour désinstaller Ansible et installer Ansible 2.9.0 dans un environnement virtuel
-      - name: Setup Ansible Environment on VM
+      # Créer un fichier ansible.cfg temporaire
+      - name: Create Ansible Config
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            sudo apt update -y
-            sudo apt remove --purge ansible -y
-            sudo apt install -y python2.7 python2.7-dev python-pip
-            sudo python2.7 -m pip install virtualenv
-            virtualenv -p python2.7 ~/ansible-env
-            source ~/ansible-env/bin/activate
-            pip install ansible==2.9.0
-          EOF
+          echo "[defaults]" > $GITHUB_WORKSPACE/ansible/ansible.cfg
+          echo "host_key_checking = False" >> $GITHUB_WORKSPACE/ansible/ansible.cfg
+          echo "inventory = $GITHUB_WORKSPACE/ansible/hosts" >> $GITHUB_WORKSPACE/ansible/ansible.cfg
+        shell: bash
 
-      # Copier les fichiers Ansible (playbook et répertoire des rôles) vers la VM
       - name: Copy Ansible Playbook and Roles
         run: |
           scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
 
-      # Exécuter le playbook avec Ansible dans l'environnement virtuel
       - name: Run Ansible Playbook
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             source ~/ansible-env/bin/activate
-            # Commande pour tester le ping avec Ansible pour diagnostiquer la connexion
             ansible -i ~/ansible/hosts webserver -m ping -vvv
-            # Exécution du playbook avec plus de verbosité
-            ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
+            ANSIBLE_CONFIG=~/ansible/ansible.cfg ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
           EOF
