@@ -55,12 +55,24 @@ jobs:
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
 
-      - name: Update known_hosts with VM IP
+      - name: Add host key to known_hosts
         run: |
-          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
-          cat ~/.ssh/known_hosts
-        shell: bash
+          ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
+
+      - name: Validate SSH Connectivity and Prepare Environment on VM
+        run: |
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            # Ajouter la clé publique dans authorized_keys si elle n'est pas déjà présente
+            if ! grep -q "$(cat ~/.ssh/id_ansible_rsa.pub)" ~/.ssh/authorized_keys; then
+              echo "$(cat ~/.ssh/id_ansible_rsa.pub)" >> ~/.ssh/authorized_keys
+            fi
+            # Assurer que les permissions sont correctement définies
+            chmod 700 ~/.ssh
+            chmod 600 ~/.ssh/authorized_keys
+            # Ajouter l'hôte au fichier known_hosts
+            ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
+            echo "SSH connectivity is working"
+          EOF
 
       - name: Create Inventory with SSH Options
         run: |
@@ -74,19 +86,13 @@ jobs:
           echo "inventory = $GITHUB_WORKSPACE/ansible/hosts" >> $GITHUB_WORKSPACE/ansible/ansible.cfg
         shell: bash
 
-      - name: Create SSH Config
-        run: |
-          echo "Host *" > ~/.ssh/config
-          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
-          echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
-
       - name: Copy Ansible Playbook and Roles
         run: |
-          scp -F ~/.ssh/config -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
+          scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
 
       - name: Run Ansible Playbook
         run: |
-          ssh -F ~/.ssh/config -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             source ~/ansible-env/bin/activate
             ansible -i ~/ansible/hosts webserver -m ping -vvv
             ANSIBLE_CONFIG=~/ansible/ansible.cfg ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
