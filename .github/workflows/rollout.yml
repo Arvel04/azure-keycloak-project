@@ -63,9 +63,11 @@ jobs:
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
           ssh-keygen -R "$VM_IP" || true  # Supprimer l'ancienne entrée si elle existe
           ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts  # Ajouter la clé SSH
+          # Affichage du contenu de known_hosts pour vérification
+          cat ~/.ssh/known_hosts
         shell: bash
 
-      - name: Test SSH Connectivity
+      - name: Test SSH Connectivity with SSH command
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
@@ -98,5 +100,8 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             source ~/ansible-env/bin/activate
+            # Commande pour tester le ping avec Ansible pour diagnostiquer la connexion
+            ansible -i ~/ansible/hosts webserver -m ping -vvv
+            # Exécution du playbook avec plus de verbosité
             ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
           EOF
