@@ -59,7 +59,6 @@ jobs:
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
           ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
-          cat ~/.ssh/known_hosts
         shell: bash
 
       - name: Test SSH Connectivity with SSH command
@@ -69,7 +68,7 @@ jobs:
       - name: Create Inventory with SSH Options
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'" >> $GITHUB_WORKSPACE/ansible/hosts
+          echo "$VM_IP ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'" >> $GITHUB_WORKSPACE/ansible/hosts
 
       - name: Create Ansible Config
         run: |
