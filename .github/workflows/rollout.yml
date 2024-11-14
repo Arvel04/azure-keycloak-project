@@ -62,10 +62,6 @@ jobs:
           cat ~/.ssh/known_hosts
         shell: bash
 
-      - name: Test SSH Connectivity with SSH command
-        run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
-
       - name: Create Inventory with SSH Options
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
@@ -78,17 +74,19 @@ jobs:
           echo "inventory = $GITHUB_WORKSPACE/ansible/hosts" >> $GITHUB_WORKSPACE/ansible/ansible.cfg
         shell: bash
 
+      - name: Create SSH Config
+        run: |
+          echo "Host *" > ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+          echo "  UserKnownHostsFile=/dev/null" >> ~/.ssh/config
+
       - name: Copy Ansible Playbook and Roles
         run: |
-          scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
-
-      - name: Add host key to known_hosts
-        run: |
-          ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
+          scp -F ~/.ssh/config -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
 
       - name: Run Ansible Playbook
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh -F ~/.ssh/config -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             source ~/ansible-env/bin/activate
             ansible -i ~/ansible/hosts webserver -m ping -vvv
             ANSIBLE_CONFIG=~/ansible/ansible.cfg ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
