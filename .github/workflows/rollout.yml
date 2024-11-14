@@ -44,21 +44,25 @@ jobs:
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
+      # Configuration du répertoire SSH et ajout de la clé publique au fichier known_hosts
       - name: Prepare SSH Directory
         run: |
           mkdir -p ~/.ssh
           touch ~/.ssh/known_hosts 
           chmod 600 ~/.ssh/known_hosts
 
+      - name: Add host key to known_hosts
+        run: |
+          ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      # Configurer SSH pour Ansible en déplaçant la clé privée
       - name: Configure SSH for Ansible
         run: |
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
 
-      - name: Add host key to known_hosts
-        run: |
-          ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
-
+      # Validation de la connectivité SSH et préparation de l'environnement sur la machine distante
       - name: Validate SSH Connectivity and Prepare Environment on VM
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
@@ -74,11 +78,13 @@ jobs:
             echo "SSH connectivity is working"
           EOF
 
+      # Créer un fichier d'inventaire Ansible avec les options SSH
       - name: Create Inventory with SSH Options
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
           echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'" >> $GITHUB_WORKSPACE/ansible/hosts
 
+      # Créer la configuration Ansible pour désactiver la vérification des clés d'hôte
       - name: Create Ansible Config
         run: |
           echo "[defaults]" > $GITHUB_WORKSPACE/ansible/ansible.cfg
@@ -86,10 +92,18 @@ jobs:
           echo "inventory = $GITHUB_WORKSPACE/ansible/hosts" >> $GITHUB_WORKSPACE/ansible/ansible.cfg
         shell: bash
 
+      # Démarrer un agent SSH et ajouter la clé privée (utile dans certains environnements CI/CD)
+      - name: Start SSH agent and add the private key
+        run: |
+          eval $(ssh-agent -s)
+          ssh-add ~/.ssh/id_ansible_rsa
+
+      # Copier les fichiers du playbook et des rôles vers la machine distante
       - name: Copy Ansible Playbook and Roles
         run: |
           scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
 
+      # Exécuter le playbook Ansible
       - name: Run Ansible Playbook
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
