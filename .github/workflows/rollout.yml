@@ -1,3 +1,4 @@
+# Nom de la pipeline et branche
 name: Rollout
 on:
   push:
@@ -44,50 +45,63 @@ jobs:
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
-      - name: Prepare SSH Directory and Configure Permissions
+      # Préparer le répertoire SSH pour éviter les erreurs de fichier manquant
+      - name: Prepare SSH Directory
         run: |
           mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
+          touch ~/.ssh/known_hosts  # Crée le fichier si nécessaire
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Configure SSH for Ansible
+        run: |
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
-          touch ~/.ssh/known_hosts
 
-      - name: Add VM Host Key to known_hosts
-        run: ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
-
-      - name: Validate SSH Connectivity and Prepare Environment on VM
+      # Ajouter la clé publique de la VM dans known_hosts sans passer par ssh-agent
+      - name: Update known_hosts with VM IP
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            mkdir -p ~/.ssh
-            chmod 700 ~/.ssh
-            if ! grep -q "$(cat ~/.ssh/id_ansible_rsa.pub 2>/dev/null)" ~/.ssh/authorized_keys; then
-              echo "$(cat ~/.ssh/id_ansible_rsa.pub 2>/dev/null)" >> ~/.ssh/authorized_keys
-            fi
-            chmod 600 ~/.ssh/authorized_keys
-            ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
-            echo "SSH connectivity is working"
-          EOF
+          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
+          ssh-keygen -R "$VM_IP" || true  # Supprimer l'ancienne entrée si elle existe
+          ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts  # Ajouter la clé SSH
+          # Affichage du contenu de known_hosts pour vérification
+          cat ~/.ssh/known_hosts
+        shell: bash
 
+      - name: Test SSH Connectivity with SSH command
+        run: |
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+
+      # Mise à jour du fichier d'inventaire avec ansible_ssh_common_args sans ssh-agent
       - name: Create Inventory with SSH Options
         run: |
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
           echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'" >> $GITHUB_WORKSPACE/ansible/hosts
 
-      - name: Create Ansible Config
+      # Etape pour désinstaller Ansible et installer Ansible 2.9.0 dans un environnement virtuel
+      - name: Setup Ansible Environment on VM
         run: |
-          echo "[defaults]" > $GITHUB_WORKSPACE/ansible/ansible.cfg
-          echo "host_key_checking = False" >> $GITHUB_WORKSPACE/ansible/ansible.cfg
-          echo "inventory = $GITHUB_WORKSPACE/ansible/hosts" >> $GITHUB_WORKSPACE/ansible/ansible.cfg
-        shell: bash
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            sudo apt update -y
+            sudo apt remove --purge ansible -y
+            sudo apt install -y python2.7 python2.7-dev python-pip
+            sudo python2.7 -m pip install virtualenv
+            virtualenv -p python2.7 ~/ansible-env
+            source ~/ansible-env/bin/activate
+            pip install ansible==2.9.0
+          EOF
 
-      - name: Copy Ansible Playbook and Roles to Remote
+      # Copier les fichiers Ansible (playbook et répertoire des rôles) vers la VM
+      - name: Copy Ansible Playbook and Roles
         run: |
           scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
 
-      - name: Run Ansible Playbook on Remote
+      # Exécuter le playbook avec Ansible dans l'environnement virtuel
+      - name: Run Ansible Playbook
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            source ~/ansible-env/bin/activate || true
+            source ~/ansible-env/bin/activate
+            # Commande pour tester le ping avec Ansible pour diagnostiquer la connexion
             ansible -i ~/ansible/hosts webserver -m ping -vvv
-            ANSIBLE_CONFIG=~/ansible/ansible.cfg ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
+            # Exécution du playbook avec plus de verbosité
+            ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
           EOF
