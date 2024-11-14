@@ -45,9 +45,15 @@ jobs:
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
-      - name: Configure SSH for Ansible
+      # Préparer le répertoire SSH pour éviter les erreurs de fichier manquant
+      - name: Prepare SSH Directory
         run: |
           mkdir -p ~/.ssh
+          touch ~/.ssh/known_hosts  # Crée le fichier si nécessaire
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Configure SSH for Ansible
+        run: |
           mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
           eval "$(ssh-agent -s)"
