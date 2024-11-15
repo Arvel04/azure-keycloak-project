@@ -67,22 +67,16 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
-      - name: Setup Python and Ansible on VM
+      - name: Setup Python 2.7 and Ansible 2.9.0 on VM
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
             sudo apt update -y
             sudo apt upgrade -y
-            sudo apt remove --purge python3-venv ansible python3.8 python3.9 -y || true
+            sudo apt remove --purge python3-venv ansible -y || true
             sudo apt autoremove -y
-            sudo apt install -y software-properties-common
-            sudo add-apt-repository ppa:deadsnakes/ppa -y
-            sudo apt update
-            sudo apt install -y python3.9 python3.9-venv
-            curl -O https://bootstrap.pypa.io/get-pip.py
-            sudo python3.9 get-pip.py
-            sudo pip install ansible==2.12.0
-            ansible-galaxy collection install azure.azcollection --force
+            sudo apt install -y python2.7 python-pip
+            pip install ansible==2.9.0
           EOF
 
       - name: Copy Ansible Playbook and Roles
@@ -93,7 +87,6 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
-            source ~/ansible-env/bin/activate
             ansible -i ~/ansible/hosts webserver -m ping -vvv
             ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
           EOF
