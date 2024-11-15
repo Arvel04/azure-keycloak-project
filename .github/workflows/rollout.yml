@@ -72,7 +72,9 @@ jobs:
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
             sudo apt update -y
-            sudo apt remove --purge ansible -y || true
+            sudo apt install -y software-properties-common
+            sudo add-apt-repository ppa:deadsnakes/ppa -y
+            sudo apt update
             sudo apt install -y python3.10 python3.10-venv python3.10-distutils
             python3.10 -m pip install --upgrade pip
             pip install virtualenv
