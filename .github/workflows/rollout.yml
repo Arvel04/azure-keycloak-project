@@ -76,6 +76,12 @@ jobs:
             pip install ansible==2.9.0
           EOF
 
+      - name: Create Ansible Inventory
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/ansible
+          echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
+          echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin" >> $GITHUB_WORKSPACE/ansible/hosts    
+          
       - name: Copy Ansible Playbook and Roles
         run: |
           scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
