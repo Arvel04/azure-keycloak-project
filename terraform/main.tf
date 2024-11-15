@@ -25,27 +25,25 @@
 # Configuration du backend distant pour Terraform
 terraform {
   backend "azurerm" {
-    resource_group_name   = "my-first-terraform-RG"  # Utilisation du groupe de ressources existant
+    resource_group_name   = var.resource_group_name
     storage_account_name  = var.storage_account_name
     container_name        = var.container_name
     key                   = var.key
   }
 }
 
-# Autres ressources Terraform (réseau, machine virtuelle, etc.)
-
 # Réseau virtuel
 resource "azurerm_virtual_network" "my_terraform_network" {
-  name                = "my-first-terraform-network"
+  name                = var.vnet_name
   address_space       = ["10.0.0.0/16"]
-  location            = "West Europe"  
-  resource_group_name = "my-first-terraform-RG"  
+  location            = var.location
+  resource_group_name = var.resource_group_name
 }
 
 # Sous-réseau
 resource "azurerm_subnet" "my_terraform_subnet" {
-  name                 = "my-first-terraform-subnet"
-  resource_group_name  = "my-first-terraform-RG"  
+  name                 = var.subnet_name
+  resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.my_terraform_network.name
   address_prefixes     = ["10.0.1.0/24"]
 }
@@ -53,16 +51,16 @@ resource "azurerm_subnet" "my_terraform_subnet" {
 # IP public
 resource "azurerm_public_ip" "my_terraform_public_ip" {
   name                = "my-first-terraform-PublicIP"
-  location            = "West Europe"  
-  resource_group_name = "my-first-terraform-RG"  
+  location            = var.location
+  resource_group_name = var.resource_group_name
   allocation_method   = "Dynamic"
 }
 
-# sécurityGroup réseau (NSG)
+# SécurityGroup réseau (NSG)
 resource "azurerm_network_security_group" "my_terraform_nsg" {
-  name                = "my-first-terraform-NSG"
-  location            = "West Europe" 
-  resource_group_name = "my-first-terraform-RG"  
+  name                = var.nsg_name
+  location            = var.location
+  resource_group_name = var.resource_group_name
 
   security_rule {
     name                       = "SSH"
@@ -80,13 +78,13 @@ resource "azurerm_network_security_group" "my_terraform_nsg" {
 # Interface réseau (NIC)
 resource "azurerm_network_interface" "my_terraform_nic" {
   name                = "my-first-terraform-nic"
-  location            = "West Europe"  
-  resource_group_name = "my-first-terraform-RG"  
+  location            = var.location
+  resource_group_name = var.resource_group_name
 
   ip_configuration {
     name                          = "my-nic-configuration"
     subnet_id                     = azurerm_subnet.my_terraform_subnet.id
-    private_ip_address            = "10.0.1.4"
+    private_ip_address            = var.private_ip
     private_ip_address_allocation = "Static"
     public_ip_address_id          = azurerm_public_ip.my_terraform_public_ip.id
   }
@@ -106,31 +104,31 @@ resource "tls_private_key" "secureadmin_ssh" {
 
 # Machine virtuelle Linux
 resource "azurerm_linux_virtual_machine" "my_terraform_vm" {
-  name                  = "my-terraform-vm"
-  location              = "West Europe"  
-  resource_group_name   = "my-first-terraform-RG"  
+  name                  = var.vm_name
+  location              = var.location
+  resource_group_name   = var.resource_group_name
   network_interface_ids = [azurerm_network_interface.my_terraform_nic.id]
-  size                  = "Standard_DS1_v2"
+  size                  = var.vm_size
 
   os_disk {
     name                 = "my-terraform-OsDisk"
     caching              = "ReadWrite"
-    storage_account_type = "Premium_LRS"
+    storage_account_type = var.os_disk_type
   }
 
   source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
     sku       = "18.04-LTS"
-    version   = "latest"
+    version   = var.image_version
   }
 
   computer_name                   = "terraform-vm"
-  admin_username                  = "secureadmin"
+  admin_username                  = var.vm_username
   disable_password_authentication = true
 
   admin_ssh_key {
-    username   = "secureadmin"
+    username   = var.vm_username
     public_key = tls_private_key.secureadmin_ssh.public_key_openssh
   }
 }

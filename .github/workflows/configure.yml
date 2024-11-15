@@ -1,6 +1,10 @@
-name: Configure Resources
+name: Configure
+
 on:
-  workflow_dispatch:
+  workflow_run:
+    workflows: ["Rollout"]
+    types:
+      - completed
 
 jobs:
   configure:
@@ -10,47 +14,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1
-
-      - name: Authenticate with Azure
+      - name: Set up SSH Key and VM IP from Rollout Outputs
         run: |
-          echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
-        working-directory: terraform/   
-
-      - name: Initialize Terraform with Backend
-        run: terraform init -backend-config="${GITHUB_WORKSPACE}/terraform/backend.tfvars" 
-        working-directory: terraform/
-      
-      - name: Get VM IP from Terraform output
-        id: get_ip
-        run: |
-          # Extraire l'IP sans guillemets ni autres caractères indésirables
-          VM_IP=$(terraform output -raw public_ip_address | awk -F'"' '{print $2}')
-          echo "VM_IP=$VM_IP" >> $GITHUB_ENV
-        working-directory: terraform/
-
-      - name: Create SSH directory
-        run: mkdir -p ~/.ssh
-
-      - name: Create SSH key file
-        env:
-          ANSIBLE_SSH_PRIVATE_KEY: ${{ secrets.ANSIBLE_SSH_PRIVATE_KEY }}
-        run: |
-          echo "${ANSIBLE_SSH_PRIVATE_KEY}" > ~/.ssh/id_ansible_rsa
+          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
+          echo "VM_IP=${VM_IP}" >> $GITHUB_ENV
+          mkdir -p ~/.ssh
+          mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
+          ssh-keyscan -H "${VM_IP}" >> ~/.ssh/known_hosts
 
-      - name: Create Static Inventory with VM IP
+      - name: Test SSH Connectivity
         run: |
-          echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          echo "$VM_IP ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> $GITHUB_WORKSPACE/ansible/hosts
-        working-directory: ansible/
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@${{ env.VM_IP }} echo "SSH connectivity is working"
 
-      - name: Run Ansible Playbook with Static Inventory
-        uses: dawidd6/action-ansible-playbook@v2
-        with:
-          playbook: ansible/playbook.yml
-          inventory: $GITHUB_WORKSPACE/ansible/hosts
+      - name: Copy Ansible Playbook and Roles
+        run: |
+          scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@${{ env.VM_IP }}:~/ansible
+
+      - name: Run Ansible Playbook on Remote VM
+        run: |
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@${{ env.VM_IP }} << 'EOF'
+            source ~/ansible-env/bin/activate
+            ansible -i ~/ansible/hosts webserver -m ping -vvv
+            ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
+          EOF

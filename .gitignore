@@ -1,5 +1,29 @@
-.connection.env
-.terraform
-terraform.tfstate
-terraform.tfstate.backup
-terraform.lock.hcl
+# Terraform
+.terraform/                 
+*.tfstate                    
+*.tfstate.backup             
+terraform.lock.hcl           
+
+# Variables d'environnement sensibles
+.connection.env              
+*.tfvars
+# Vault secrets
+secrets.yml
+
+# Variables files
+vars.yml
+
+# SSH keys
+~/.ssh/id_ansible_rsa
+
+# Node modules
+node_modules/
+
+# Logs
+*.log                 
+
+# Fichiers temporaires
+.idea/                       
+.vscode/                     
+*.swp                        
+.DS_Store                                     

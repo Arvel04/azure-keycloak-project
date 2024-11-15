@@ -1,19 +1,30 @@
+# Nom du groupe de ressources
 output "resource_group_name" {
-  value = "my-first-terraform-RG" 
+  value       = var.resource_group_name
+  description = "Le nom du groupe de ressources"
 }
 
+# IP publique de la VM
 output "VM_IP" {
-  value = azurerm_public_ip.my_terraform_public_ip.ip_address
-  description = "The public IP address of the VM"
+  value       = azurerm_public_ip.my_terraform_public_ip.ip_address
+  description = "L'adresse IP publique de la VM"
 }
 
-output "tls_private_key" {
-  value     = tls_private_key.secureadmin_ssh.private_key_pem
-  sensitive = true
-}
-
+# Clé privée TLS pour SSH (sensible)
 output "private_key" {
   value       = tls_private_key.secureadmin_ssh.private_key_pem
   description = "La clé privée pour l'accès SSH"
   sensitive   = true
+}
+
+# Nom de la VM
+output "vm_name" {
+  value       = azurerm_linux_virtual_machine.my_terraform_vm.name
+  description = "Le nom de la machine virtuelle"
+}
+
+# IP privée de la VM
+output "vm_private_ip" {
+  value       = azurerm_network_interface.my_terraform_nic.ip_configuration[0].private_ip_address
+  description = "L'adresse IP privée de la VM"
 }

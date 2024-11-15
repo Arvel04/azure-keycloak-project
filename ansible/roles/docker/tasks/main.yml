@@ -1,32 +1,38 @@
+---
+- name: Create Docker network
+  docker_network:
+    name: "{{ docker_network }}"
+    state: present
+
 - name: Run PostgreSQL container
   docker_container:
     name: postgres
     image: postgres:13
     env:
-      POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak
-      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: "{{ postgres_db }}"
+      POSTGRES_USER: "{{ postgres_user }}"
+      POSTGRES_PASSWORD: "{{ postgres_password }}"
     restart_policy: always
     ports:
       - "5432:5432"
     networks:
-      - keycloak_network
+      - "{{ docker_network }}"
 
 - name: Run Keycloak container
   docker_container:
     name: keycloak
     image: jboss/keycloak:latest
     env:
-      DB_VENDOR: postgres
-      DB_ADDR: postgres
-      DB_DATABASE: keycloak
-      DB_USER: keycloak
-      DB_PASSWORD: password123
+      DB_VENDOR: "{{ keycloak_db_vendor }}"
+      DB_ADDR: "{{ keycloak_db_addr }}"
+      DB_DATABASE: "{{ keycloak_db_database }}"
+      DB_USER: "{{ keycloak_db_user }}"
+      DB_PASSWORD: "{{ keycloak_db_password }}"
     restart_policy: always
     ports:
       - "8080:8080"
     networks:
-      - keycloak_network
+      - "{{ docker_network }}"
 
 - name: Run Nginx container
   docker_container:
@@ -36,7 +42,12 @@
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./static:/usr/share/nginx/html
+      - "{{ nginx_config_file }}:/etc/nginx/nginx.conf"
+      - "{{ nginx_static_dir }}:/usr/share/nginx/html"
+    environment:
+      KEYCLOAK_URL: "http://keycloak:8080/auth"
+      KEYCLOAK_REALM: "{{ keycloak_realm }}"
+      CLIENT_ID: "{{ keycloak_client_id }}"
+      CLIENT_SECRET: "{{ keycloak_client_secret }}"
     networks:
-      - keycloak_network
+      - "{{ docker_network }}"

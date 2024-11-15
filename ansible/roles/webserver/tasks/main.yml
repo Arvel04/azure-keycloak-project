@@ -1,24 +1,20 @@
-- name: Wait for Keycloak to be ready
+---
+- name: Wait for PostgreSQL to be ready
   wait_for:
-    host: localhost
-    port: 8080
+    host: "localhost"
+    port: 5432
     state: started
     delay: 10
 
-- name: Run Nginx container with Keycloak authentication
+- name: Configure Keycloak DB container
   docker_container:
-    name: nginx
-    image: nginx:latest
+    name: keycloak
+    image: jboss/keycloak:latest
+    env:
+      DB_VENDOR: "{{ keycloak_db_vendor }}"
+      DB_ADDR: "{{ keycloak_db_addr }}"
+      DB_DATABASE: "{{ keycloak_db_database }}"
+      DB_USER: "{{ keycloak_db_user }}"
+      DB_PASSWORD: "{{ keycloak_db_password }}"
     restart_policy: always
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-      - ./static:/usr/share/nginx/html
-    environment:
-      KEYCLOAK_URL: "http://keycloak:8080/auth"
-      KEYCLOAK_REALM: "myrealm"
-      CLIENT_ID: "nginx-client"
-      CLIENT_SECRET: "nginx-secret"
-    networks:
-      - keycloak_network
+    state: started
