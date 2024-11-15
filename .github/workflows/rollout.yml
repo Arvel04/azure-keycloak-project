@@ -23,7 +23,6 @@ jobs:
           echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
         working-directory: terraform/
 
-
       - name: Initialize Terraform with Backend
         run: terraform init -backend-config="${GITHUB_WORKSPACE}/terraform/backend.tfvars"
         working-directory: terraform/
@@ -66,7 +65,7 @@ jobs:
 
       - name: Test SSH Connectivity with SSH command
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
       - name: Setup Ansible Environment on VM
         run: |
