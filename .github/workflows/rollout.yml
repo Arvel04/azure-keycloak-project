@@ -73,14 +73,13 @@ jobs:
             set -e
             sudo apt update -y
             sudo apt upgrade -y
+            sudo apt remove --purge python3-venv ansible -y
+            sudo apt autoremove -y
             sudo apt install -y software-properties-common
             sudo add-apt-repository ppa:deadsnakes/ppa -y
             sudo apt update
-            sudo apt install -y python3.10 python3.10-venv python3.10-distutils
-            python3.10 -m pip install --upgrade pip
-            pip install virtualenv
-            virtualenv -p python3.10 ~/ansible-env
-            source ~/ansible-env/bin/activate
+            sudo apt install -y python3.10 python3.10-distutils
+            curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
             pip install ansible==2.12.0
             ansible-galaxy collection install azure.azcollection --force
           EOF
