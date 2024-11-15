@@ -55,9 +55,7 @@ jobs:
       - name: Update known_hosts with VM IP
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          # Suppression de l'ancienne clé si elle existe
           ssh-keygen -R "$VM_IP" || true
-          # Ajout de la nouvelle clé au fichier known_hosts
           ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
           cat ~/.ssh/known_hosts
 
@@ -67,11 +65,11 @@ jobs:
 
       - name: Test SSH Connectivity with SSH command
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
       - name: Setup Python 2.7 and Ansible 2.9.0 on VM
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
             sudo apt update -y
             sudo apt upgrade -y
@@ -84,7 +82,7 @@ jobs:
       - name: Create Ansible Inventory on VM
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$VM_IP << EOF
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$VM_IP << EOF
             mkdir -p ~/ansible
             echo "[webserver]" > ~/ansible/hosts
             echo "$VM_IP ansible_user=secureadmin" >> ~/ansible/hosts
@@ -92,11 +90,11 @@ jobs:
 
       - name: Copy Ansible Playbook and Roles
         run: |
-          scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
+          scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
 
       - name: Check Files on VM
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             ls -l ~/ansible
             cat ~/ansible/hosts
             cat ~/ansible/playbook.yml
@@ -104,7 +102,7 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
             ansible -i ~/ansible/hosts webserver -m ping -vvv
             ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
