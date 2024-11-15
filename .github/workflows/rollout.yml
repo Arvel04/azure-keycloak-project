@@ -63,13 +63,16 @@ jobs:
           cat ~/.ssh/known_hosts
         shell: bash
 
-      - name: Test SSH Connectivity with SSH command
+      - name: Install sshpass
+        run: sudo apt-get install -y sshpass
+
+      - name: Test SSH Connectivity with sshpass
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o IdentitiesOnly=yes -o ConnectTimeout=60 secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
       - name: Setup Python 2.7 and Ansible 2.9.0 on VM
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
             sudo apt update -y
             sudo apt upgrade -y
@@ -81,11 +84,11 @@ jobs:
 
       - name: Copy Ansible Playbook and Roles
         run: |
-          scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
 
       - name: Run Ansible Playbook
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
             ansible -i ~/ansible/hosts webserver -m ping -vvv
             ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
