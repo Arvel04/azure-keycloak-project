@@ -101,7 +101,6 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
-            ssh-keyscan -H $(cat $GITHUB_WORKSPACE/vm_ip.txt) >> ~/.ssh/known_hosts
             ansible -i ~/ansible/hosts webserver -m ping -vvv
             ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
           EOF
