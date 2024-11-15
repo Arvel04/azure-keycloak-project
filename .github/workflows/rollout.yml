@@ -36,7 +36,7 @@ jobs:
         id: get_outputs
         run: |
           VM_IP=$(terraform output -raw VM_IP | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n 1)
-          PRIVATE_KEY=$(terraform output -raw private_key)
+          PRIVATE_KEY=$(terraform output -raw ssh_private_key)
           echo "$VM_IP" > $GITHUB_WORKSPACE/vm_ip.txt
           echo "$PRIVATE_KEY" > $GITHUB_WORKSPACE/id_ansible_rsa
         working-directory: terraform/
@@ -47,13 +47,10 @@ jobs:
       - name: Prepare SSH Directory
         run: |
           mkdir -p ~/.ssh
+          echo "${{ steps.get_outputs.outputs.ssh_private_key }}" > ~/.ssh/id_ansible_rsa
+          chmod 600 ~/.ssh/id_ansible_rsa
           touch ~/.ssh/known_hosts
           chmod 600 ~/.ssh/known_hosts
-
-      - name: Configure SSH for Ansible
-        run: |
-          mv $GITHUB_WORKSPACE/id_ansible_rsa ~/.ssh/id_ansible_rsa
-          chmod 600 ~/.ssh/id_ansible_rsa
 
       - name: Update known_hosts with VM IP
         run: |
@@ -63,16 +60,13 @@ jobs:
           cat ~/.ssh/known_hosts
         shell: bash
 
-      - name: Install sshpass
-        run: sudo apt-get install -y sshpass
-
-      - name: Test SSH Connectivity with sshpass
+      - name: Test SSH Connectivity with SSH command
         run: |
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
       - name: Setup Python 2.7 and Ansible 2.9.0 on VM
         run: |
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
             sudo apt update -y
             sudo apt upgrade -y
@@ -84,11 +78,11 @@ jobs:
 
       - name: Copy Ansible Playbook and Roles
         run: |
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
+          scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
 
       - name: Run Ansible Playbook
         run: |
-          sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             set -e
             ansible -i ~/ansible/hosts webserver -m ping -vvv
             ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml

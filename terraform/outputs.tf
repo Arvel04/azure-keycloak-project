@@ -17,6 +17,11 @@ output "private_key" {
   sensitive   = true
 }
 
+output "ssh_public_key" {
+  value = tls_private_key.secureadmin_ssh.public_key_openssh
+}
+
+
 # Nom de la VM
 output "vm_name" {
   value       = azurerm_linux_virtual_machine.my_terraform_vm.name
