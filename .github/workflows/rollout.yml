@@ -78,10 +78,11 @@ jobs:
 
       - name: Create Ansible Inventory on VM
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$VM_IP << EOF
             mkdir -p ~/ansible
             echo "[webserver]" > ~/ansible/hosts
-            echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin" >> ~/ansible/hosts
+            echo "$VM_IP ansible_user=secureadmin" >> ~/ansible/hosts
           EOF
 
       - name: Copy Ansible Playbook and Roles
