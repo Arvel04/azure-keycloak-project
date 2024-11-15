@@ -80,11 +80,19 @@ jobs:
         run: |
           mkdir -p $GITHUB_WORKSPACE/ansible
           echo "[webserver]" > $GITHUB_WORKSPACE/ansible/hosts
-          echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin" >> $GITHUB_WORKSPACE/ansible/hosts    
-          
+          echo "$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible_user=secureadmin" >> $GITHUB_WORKSPACE/ansible/hosts
+
       - name: Copy Ansible Playbook and Roles
         run: |
           scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
+
+      - name: Check Files on VM
+        run: |
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            ls -l ~/ansible
+            cat ~/ansible/hosts
+            cat ~/ansible/playbook.yml
+          EOF
 
       - name: Run Ansible Playbook
         run: |
@@ -93,4 +101,3 @@ jobs:
             ansible -i $GITHUB_WORKSPACE/ansible/hosts webserver -m ping -vvv
             ansible-playbook -vvv -i $GITHUB_WORKSPACE/ansible/hosts $GITHUB_WORKSPACE/ansible/playbook.yml
           EOF
-
