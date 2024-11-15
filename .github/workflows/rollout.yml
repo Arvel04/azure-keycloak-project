@@ -55,10 +55,15 @@ jobs:
       - name: Update known_hosts with VM IP
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
+          # Suppression de l'ancienne clé si elle existe
           ssh-keygen -R "$VM_IP" || true
+          # Ajout de la nouvelle clé au fichier known_hosts
           ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
           cat ~/.ssh/known_hosts
-        shell: bash
+
+      - name: Delay for SSH configuration propagation
+        run: |
+          sleep 5
 
       - name: Test SSH Connectivity with SSH command
         run: |
