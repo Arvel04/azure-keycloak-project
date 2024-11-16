@@ -35,7 +35,7 @@ jobs:
       - name: Get VM IP and credentials from Terraform output
         id: get_outputs
         run: |
-          VM_IP=$(terraform output -raw VM_IP)
+          VM_IP=$(terraform output -raw VM_IP) | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n 1)
           VM_USERNAME=$(terraform output -raw vm_username)
           VM_PASSWORD=$(terraform output -raw vm_password)
           echo "$VM_IP" > $GITHUB_WORKSPACE/vm_ip.txt
