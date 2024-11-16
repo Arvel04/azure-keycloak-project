@@ -58,6 +58,7 @@ jobs:
           ssh-keygen -R "$VM_IP" || true
           ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
           cat ~/.ssh/known_hosts
+        shell: bash
 
       - name: Delay for SSH configuration propagation
         run: |
@@ -103,8 +104,4 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            set -e
-            ansible -i ~/ansible/hosts webserver -m ping -vvv
-            ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
-          EOF
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORK
