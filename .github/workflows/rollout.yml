@@ -42,10 +42,7 @@ jobs:
         working-directory: terraform/
 
       - name: Export VM IP to environment file
-        run: |
-          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          echo "VM_IP=$VM_IP" >> $GITHUB_ENV
-          echo "VM_IP is $VM_IP"  # This line for debugging purposes
+        run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
       - name: Prepare SSH Directory
         run: |
@@ -80,6 +77,12 @@ jobs:
             sudo apt install -y python2.7 python-pip
             pip install ansible==2.9.0
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+            source ~/.bashrc
+          EOF
+
+      - name: Verify Ansible Installation
+        run: |
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             source ~/.bashrc
             ansible-playbook --version
           EOF
