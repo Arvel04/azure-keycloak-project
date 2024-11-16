@@ -90,7 +90,8 @@ jobs:
 
       - name: Copy Ansible Playbook and Roles
         run: |
-          scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa -r $GITHUB_WORKSPACE/ansible secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible
+          scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa -r $GITHUB_WORKSPACE/ansible/playbook.yml secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible/
+          scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa -r $GITHUB_WORKSPACE/ansible/roles secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible/
 
       - name: Check Files on VM
         run: |
