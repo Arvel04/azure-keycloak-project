@@ -99,14 +99,16 @@ jobs:
             echo "$VM_IP ansible_user=secureadmin ansible_ssh_private_key_file=/home/secureadmin/.ssh/id_ansible_rsa ansible_python_interpreter=/usr/bin/python2.7" >> /home/secureadmin/ansible/hosts
           EOF
 
-      - name: Copy Ansible Playbook and Roles
+      - name: Copy Ansible Playbook and Roles to the correct directory
         run: |
           scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa ansible/playbook.yml secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/ansible/
+          scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa -r ansible/roles secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/ansible/
 
-      - name: Run Ansible Playbook on VM
+      - name: Run Ansible Playbook with the correct inventory
         run: |
           ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             cd /home/secureadmin/ansible
             ansible-playbook -i hosts playbook.yml
           EOF
+
 
