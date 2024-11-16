@@ -45,9 +45,20 @@ jobs:
 
       - name: Export VM details to environment variables
         run: |
-          echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
-          echo "VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt)" >> $GITHUB_ENV
-          echo "VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt)" >> $GITHUB_ENV
+          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt | tr -d '\n' | tr -d '\r')
+          VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt | tr -d '\n' | tr -d '\r')
+          VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt | tr -d '\n' | tr -d '\r')
+
+          # Debug pour vérifier les valeurs
+          echo "Debugging VM Details:"
+          echo "VM_IP=${VM_IP}"
+          echo "VM_USERNAME=${VM_USERNAME}"
+          echo "VM_PASSWORD=${VM_PASSWORD}"
+
+          # Écriture dans $GITHUB_ENV
+          echo "VM_IP=${VM_IP}" >> $GITHUB_ENV
+          echo "VM_USERNAME=${VM_USERNAME}" >> $GITHUB_ENV
+          echo "VM_PASSWORD=${VM_PASSWORD}" >> $GITHUB_ENV
 
       - name: Install SSH and sshpass
         run: |
@@ -57,16 +68,10 @@ jobs:
 
       - name: Verify Connectivity with Username and Password
         run: |
-          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt)
-          VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt)
           sshpass -p "$VM_PASSWORD" ssh -o StrictHostKeyChecking=no "$VM_USERNAME@$VM_IP" echo "Connection successful"
 
       - name: Copy Ansible Inventory and Playbook to VM
         run: |
-          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt)
-          VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt)
           sshpass -p "$VM_PASSWORD" ssh -o StrictHostKeyChecking=no "$VM_USERNAME@$VM_IP" << EOF
             mkdir -p ~/ansible
             echo "[webserver]" > ~/ansible/hosts
@@ -76,9 +81,6 @@ jobs:
 
       - name: Run Ansible Playbook with Username and Password
         run: |
-          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt)
-          VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt)
           sshpass -p "$VM_PASSWORD" ssh -o StrictHostKeyChecking=no "$VM_USERNAME@$VM_IP" << 'EOF'
             set -e
             cd ~/ansible
