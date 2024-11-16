@@ -101,4 +101,11 @@ jobs:
 
       - name: Copy Ansible Playbook and Roles
         run: |
-          scp -o "StrictHost
+          scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa ansible/playbook.yml secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/ansible/
+
+      - name: Run Ansible Playbook on VM
+        run: |
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            cd ~/ansible
+            ansible-playbook playbook.yml
+          EOF
