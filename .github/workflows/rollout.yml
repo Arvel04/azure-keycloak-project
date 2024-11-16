@@ -68,6 +68,16 @@ jobs:
 
       - name: Verify Connectivity with Username and Password
         run: |
+          # Nettoyer les variables avec tr -d '\n' | tr -d '\r'
+          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt | tr -d '\n' | tr -d '\r')
+          VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt | tr -d '\n' | tr -d '\r')
+          VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt | tr -d '\n' | tr -d '\r')
+
+          # Debugging
+          echo "Testing connection with:"
+          echo "VM_IP=${VM_IP}"
+          echo "VM_USERNAME=${VM_USERNAME}"
+          echo "VM_PASSWORD=${VM_PASSWORD}"
           sshpass -p "$VM_PASSWORD" ssh -o StrictHostKeyChecking=no "$VM_USERNAME@$VM_IP" echo "Connection successful"
 
       - name: Copy Ansible Inventory and Playbook to VM
