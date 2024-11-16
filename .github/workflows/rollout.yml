@@ -55,6 +55,11 @@ jobs:
           echo "VM_USERNAME=${VM_USERNAME}"
           echo "VM_PASSWORD=${VM_PASSWORD}"
 
+          # Sauvegarde dans les fichiers pour une réutilisation ultérieure
+          echo "$VM_IP" > $GITHUB_WORKSPACE/vm_ip.txt
+          echo "$VM_USERNAME" > $GITHUB_WORKSPACE/vm_username.txt
+          echo "$VM_PASSWORD" > $GITHUB_WORKSPACE/vm_password.txt
+
           # Écriture dans $GITHUB_ENV
           echo "VM_IP=${VM_IP}" >> $GITHUB_ENV
           echo "VM_USERNAME=${VM_USERNAME}" >> $GITHUB_ENV
@@ -78,6 +83,7 @@ jobs:
           echo "VM_IP=${VM_IP}"
           echo "VM_USERNAME=${VM_USERNAME}"
           echo "VM_PASSWORD=${VM_PASSWORD}"
+
           sshpass -p "$VM_PASSWORD" ssh -o StrictHostKeyChecking=no "$VM_USERNAME@$VM_IP" echo "Connection successful"
 
       - name: Copy Ansible Inventory and Playbook to VM
