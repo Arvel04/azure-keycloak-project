@@ -97,10 +97,10 @@ resource "azurerm_network_interface_security_group_association" "my_nic_nsg" {
 }
 
 # Clé privée TLS pour SSH
-resource "tls_private_key" "secureadmin_ssh" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
+#resource "tls_private_key" "secureadmin_ssh" {
+#  algorithm = "RSA"
+#  rsa_bits  = 4096
+#}
 
 # Machine virtuelle Linux
 resource "azurerm_linux_virtual_machine" "my_terraform_vm" {
