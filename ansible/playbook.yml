@@ -8,27 +8,25 @@
     ansible_python_interpreter: /usr/bin/python3  # Spécifier l'interpréteur Python 3
 
   tasks:
-    - name: Check if Python 3 is installed
-      command: which python3
-      register: python3_installed
-      ignore_errors: true
-
     - name: Ensure Python 3 is installed
       ansible.builtin.apt:
         name: python3
         state: present
-      when: python3_installed.rc != 0
-
-    - name: Check if pip for Python 3 is installed
-      command: which pip3
-      register: pip3_installed
-      ignore_errors: true
 
     - name: Ensure pip for Python 3 is installed
       ansible.builtin.apt:
         name: python3-pip
         state: present
-      when: pip3_installed.rc != 0
+
+    - name: Ensure Python dependencies are installed
+      ansible.builtin.apt:
+        name:
+          - python3-dev
+          - build-essential
+          - libssl-dev
+          - libffi-dev
+          - python3-setuptools
+        state: present
 
     - name: Check if Ansible is installed
       command: ansible --version
@@ -36,10 +34,7 @@
       ignore_errors: true
 
     - name: Install Ansible 2.9.0 on the VM
-      ansible.builtin.pip:
-        name: ansible==2.9.0
-        executable: /home/secureadmin/.local/bin/pip3
-        state: present
+      command: pip3 install ansible==2.9.0
       when: ansible_installed.rc != 0
 
     - name: Ensure Ansible version is correct
