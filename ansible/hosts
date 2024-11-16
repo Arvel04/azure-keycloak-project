@@ -1,0 +1,2 @@
+[webserver]
+51.136.34.167 ansible_user=secureadmin
