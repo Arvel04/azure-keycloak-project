@@ -18,7 +18,7 @@
     name: docker.io
     state: present
 
-- name: Add Docker Group
+- name: Add Docker group
   group:
     name: docker
     state: present
@@ -27,3 +27,4 @@
   user:
     name: "{{ ansible_user }}"
     group: docker
+    append: yes

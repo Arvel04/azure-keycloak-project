@@ -1,13 +1,79 @@
 ---
-- name: Set up container environment with Python 3
-  hosts: webserver
+- name: Configure VM and set up webserver
+  hosts: localhost
   become: true
   gather_facts: true
 
-  vars:
-    ansible_python_interpreter: /usr/bin/python3  # Spécifier l'interpréteur Python 3
-
   tasks:
+    - name: Ensure permissions for ansible directory
+      ansible.builtin.file:
+        path: /home/secureadmin/ansible
+        state: directory
+        mode: '0755'
+        owner: secureadmin
+        group: secureadmin
+        recurse: yes
+
+    - name: Ensure permissions for ansible.cfg file
+      ansible.builtin.file:
+        path: /home/secureadmin/ansible/ansible.cfg
+        state: file
+        mode: '0644'
+        owner: secureadmin
+        group: secureadmin
+
+    - name: Ensure permissions for hosts file
+      ansible.builtin.file:
+        path: /home/secureadmin/ansible/hosts
+        state: file
+        mode: '0644'
+        owner: secureadmin
+        group: secureadmin
+
+    - name: Ensure permissions for playbook.yml file
+      ansible.builtin.file:
+        path: /home/secureadmin/ansible/playbook.yml
+        state: file
+        mode: '0644'
+        owner: secureadmin
+        group: secureadmin
+
+    - name: Ensure permissions for common role
+      ansible.builtin.file:
+        path: /home/secureadmin/ansible/roles/common
+        state: directory
+        mode: '0755'
+        owner: secureadmin
+        group: secureadmin
+        recurse: yes
+
+    - name: Ensure permissions for docker role
+      ansible.builtin.file:
+        path: /home/secureadmin/ansible/roles/docker
+        state: directory
+        mode: '0755'
+        owner: secureadmin
+        group: secureadmin
+        recurse: yes
+
+    - name: Ensure permissions for keycloak role
+      ansible.builtin.file:
+        path: /home/secureadmin/ansible/roles/keycloak
+        state: directory
+        mode: '0755'
+        owner: secureadmin
+        group: secureadmin
+        recurse: yes
+
+    - name: Ensure permissions for webserver role
+      ansible.builtin.file:
+        path: /home/secureadmin/ansible/roles/webserver
+        state: directory
+        mode: '0755'
+        owner: secureadmin
+        group: secureadmin
+        recurse: yes
+
     - name: Ensure Python 3 is installed
       ansible.builtin.apt:
         name: python3
@@ -46,7 +112,6 @@
       ansible.builtin.debug:
         var: ansible_version_output.stdout
 
-    # Ajouter les rôles pour configurer le serveur web
     - name: Include roles for webserver setup
       ansible.builtin.include_role:
         name: common
