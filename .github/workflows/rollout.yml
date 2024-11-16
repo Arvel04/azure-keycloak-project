@@ -79,6 +79,9 @@ jobs:
             sudo apt autoremove -y
             sudo apt install -y python2.7 python-pip
             pip install ansible==2.9.0
+            echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+            source ~/.bashrc
+            ansible-playbook --version
           EOF
 
       - name: Create Ansible Inventory on VM
