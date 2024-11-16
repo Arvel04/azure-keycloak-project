@@ -10,17 +10,16 @@ output "VM_IP" {
   description = "L'adresse IP publique de la VM"
 }
 
-# Clé privée TLS pour SSH (sensible)
-#output "private_key" {
-#  value       = tls_private_key.secureadmin_ssh.private_key_pem
-#  description = "La clé privée pour l'accès SSH"
-#  sensitive   = true
-#}
+Clé privée TLS pour SSH (sensible)
+output "private_key" {
+  value       = tls_private_key.secureadmin_ssh.private_key_pem
+  description = "La clé privée pour l'accès SSH"
+  sensitive   = true
+}
 
 output "ssh_public_key" {
   value = tls_private_key.secureadmin_ssh.public_key_openssh
 }
-
 
 # Nom de la VM
 output "vm_name" {
