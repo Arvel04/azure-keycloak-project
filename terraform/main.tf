@@ -96,7 +96,7 @@ resource "azurerm_network_interface_security_group_association" "my_nic_nsg" {
   network_security_group_id = azurerm_network_security_group.my_terraform_nsg.id
 }
 
-Clé privée TLS pour SSH
+# Clé privée TLS pour SSH
 resource "tls_private_key" "secureadmin_ssh" {
   algorithm = "RSA"
   rsa_bits  = 4096
