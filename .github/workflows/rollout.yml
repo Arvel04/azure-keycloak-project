@@ -35,35 +35,43 @@ jobs:
       - name: Get VM IP and credentials from Terraform output
         id: get_outputs
         run: |
-          VM_IP=$(terraform output -raw VM_IP | grep -oP '(\d{1,3}\.){3}\d{1,3}' | head -n 1)
-          echo "$VM_IP" > $GITHUB_WORKSPACE/vm_ip.txt
+          # Récupérer les valeurs de Terraform
+          VM_IP=$(terraform output -raw VM_IP)
           VM_USERNAME=$(terraform output -raw vm_username)
           VM_PASSWORD=$(terraform output -raw vm_password)
+      
+          # Afficher pour déboguer
+          echo "Debugging Terraform Outputs:"
+          echo "VM_IP=${VM_IP}"
+          echo "VM_USERNAME=${VM_USERNAME}"
+          echo "VM_PASSWORD=${VM_PASSWORD}"
+      
+          # Vérification des formats
+          echo "Checking VM_USERNAME and VM_PASSWORD for any issues:"
+          echo "VM_USERNAME Length: $(echo -n $VM_USERNAME | wc -c)"
+          echo "VM_PASSWORD Length: $(echo -n $VM_PASSWORD | wc -c)"
+      
+          # Sauvegarder dans les fichiers
+          echo "$VM_IP" > $GITHUB_WORKSPACE/vm_ip.txt
           echo "$VM_USERNAME" > $GITHUB_WORKSPACE/vm_username.txt
           echo "$VM_PASSWORD" > $GITHUB_WORKSPACE/vm_password.txt
-        working-directory: terraform/
+      
 
       - name: Export VM details to environment variables
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt | tr -d '\n' | tr -d '\r')
-          VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt | tr -d '\n' | tr -d '\r')
-          VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt | tr -d '\n' | tr -d '\r')
-
-          # Debug pour vérifier les valeurs
-          echo "Debugging VM Details:"
-          echo "VM_IP=${VM_IP}"
-          echo "VM_USERNAME=${VM_USERNAME}"
-          echo "VM_PASSWORD=${VM_PASSWORD}"
-
-          # Sauvegarde dans les fichiers pour une réutilisation ultérieure
-          echo "$VM_IP" > $GITHUB_WORKSPACE/vm_ip.txt
-          echo "$VM_USERNAME" > $GITHUB_WORKSPACE/vm_username.txt
-          echo "$VM_PASSWORD" > $GITHUB_WORKSPACE/vm_password.txt
-
-          # Écriture dans $GITHUB_ENV
+          VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt | tr -d '\n' | tr -d '\r' | sed 's/[^a-zA-Z0-9]//g')
+          VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt | tr -d '\n' | tr -d '\r' | sed 's/[^a-zA-Z0-9]//g')
+        
+          # Debugging des variables nettoyées
+          echo "Cleaned VM_USERNAME: ${VM_USERNAME}"
+          echo "Cleaned VM_PASSWORD: ${VM_PASSWORD}"
+        
+          # Exporter dans les variables d'environnement
           echo "VM_IP=${VM_IP}" >> $GITHUB_ENV
           echo "VM_USERNAME=${VM_USERNAME}" >> $GITHUB_ENV
           echo "VM_PASSWORD=${VM_PASSWORD}" >> $GITHUB_ENV
+        
 
       - name: Install SSH and sshpass
         run: |
@@ -73,23 +81,18 @@ jobs:
 
       - name: Verify Connectivity with Username and Password
         run: |
-          # Nettoyer les variables avec tr -d '\n' | tr -d '\r' et supprimer les espaces
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt | tr -d '\n' | tr -d '\r')
-          VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt | tr -d '\n' | tr -d '\r' | sed 's/^[ \t]*//;s/[ \t]*$//')
-          VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt | tr -d '\n' | tr -d '\r' | sed 's/^[ \t]*//;s/[ \t]*$//')
+          VM_USERNAME=$(cat $GITHUB_WORKSPACE/vm_username.txt | tr -d '\n' | tr -d '\r' | sed 's/[^a-zA-Z0-9]//g')
+          VM_PASSWORD=$(cat $GITHUB_WORKSPACE/vm_password.txt | tr -d '\n' | tr -d '\r' | sed 's/[^a-zA-Z0-9]//g')
         
-          # Debugging pour vérifier les valeurs
+          # Debugging
           echo "Testing connection with:"
           echo "VM_IP=${VM_IP}"
           echo "VM_USERNAME=${VM_USERNAME}"
           echo "VM_PASSWORD=${VM_PASSWORD}"
         
-          # Debugging hex pour voir les caractères invisibles
-          echo "VM_USERNAME (Hex): $(echo -n $VM_USERNAME | xxd)"
-          echo "VM_PASSWORD (Hex): $(echo -n $VM_PASSWORD | xxd)"
+          sshpass -p "$VM_PASSWORD" ssh -o StrictHostKeyChecking=no "$VM_USERNAME@$VM_IP" echo "Connection successful"
         
-          # Test SSH avec le mode verbose pour obtenir plus de détails
-          sshpass -p "$VM_PASSWORD" ssh -o StrictHostKeyChecking=no -vvv "$VM_USERNAME@$VM_IP" echo "Connection successful"
         
 
       - name: Copy Ansible Inventory and Playbook to VM
