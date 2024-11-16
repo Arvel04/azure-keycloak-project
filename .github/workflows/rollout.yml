@@ -96,8 +96,20 @@ jobs:
           ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$VM_IP << 'EOF'
             mkdir -p ~/ansible
             echo "[webserver]" > ~/ansible/hosts
-            echo "$VM_IP ansible_user=secureadmin" >> ~/ansible/hosts
+            echo "$VM_IP ansible_user=secureadmin ansible_ssh_private_key_file=~/.ssh/id_ansible_rsa" >> ~/ansible/hosts
           EOF
+
+      - name: Copy Ansible Playbook and Roles
+        run: |
+          scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa ansible/playbook.yml secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/ansible/
+
+      - name: Run Ansible Playbook on VM
+        run: |
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+            cd ~/ansible
+            ansible-playbook -i hosts playbook.yml
+          EOF
+
 
       - name: Copy Ansible Playbook and Roles
         run: |
