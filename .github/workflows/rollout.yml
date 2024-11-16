@@ -42,44 +42,15 @@ jobs:
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
-      # Utilisation de la clé privée stockée dans les secrets GitHub
-      - name: Prepare SSH private key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ansible_rsa
-          chmod 600 ~/.ssh/id_ansible_rsa
-        # Ne pas toucher le fichier .ssh/known_hosts, car il existe déjà sur la VM
-
+      # On suppose que la clé SSH est déjà disponible dans la VM
+      # Pas besoin de la créer ou de l'ajouter
       - name: Test SSH Connectivity with SSH command
-        run: ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
-
-      - name: Setup Python 2.7 and Ansible 2.9.0 on VM
         run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            set -e
-            sudo apt update -y
-            sudo apt upgrade -y
-            sudo apt remove --purge python3-venv ansible -y || true
-            sudo apt autoremove -y
-            sudo apt install -y python2.7 python-pip
-            pip install --user ansible==2.9.0
-            echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-            source ~/.bashrc
-            which ansible-playbook
-            ansible-playbook --version
-          EOF
-
-      - name: Verify Ansible Installation
-        run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            source ~/.bashrc
-            which ansible-playbook
-            ansible-playbook --version
-          EOF
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i /home/secureadmin/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
       - name: Run Ansible Playbook with the correct inventory
         run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i /home/secureadmin/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             cd /home/secureadmin/ansible
-            ansible-playbook -i /home/secureadmin/ansible/hosts playbook.yml
+            ansible-playbook -i hosts playbook.yml
           EOF
