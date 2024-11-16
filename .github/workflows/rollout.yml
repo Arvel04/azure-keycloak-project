@@ -61,12 +61,10 @@ jobs:
         shell: bash
 
       - name: Delay for SSH configuration propagation
-        run: |
-          sleep 5
+        run: sleep 5
 
       - name: Test SSH Connectivity with SSH command
-        run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+        run: ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
       - name: Setup Python 2.7 and Ansible 2.9.0 on VM
         run: |
@@ -83,7 +81,7 @@ jobs:
       - name: Create Ansible Inventory on VM
         run: |
           VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$VM_IP << EOF
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$VM_IP << 'EOF'
             mkdir -p ~/ansible
             echo "[webserver]" > ~/ansible/hosts
             echo "$VM_IP ansible_user=secureadmin" >> ~/ansible/hosts
@@ -103,5 +101,4 @@ jobs:
           EOF
 
       - name: Run Ansible Playbook
-        run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORK
+        run: ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible-playbook ~/ansible/playbook.yml
