@@ -42,15 +42,25 @@ jobs:
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
-      # On suppose que la clé SSH est déjà disponible dans la VM
-      # Pas besoin de la créer ou de l'ajouter
-      - name: Test SSH Connectivity with SSH command
+      # Utilisation de la clé privée stockée dans les secrets GitHub
+      - name: Prepare SSH private key
         run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i /home/secureadmin/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ansible_rsa
+          chmod 600 ~/.ssh/id_ansible_rsa
 
-      - name: Run Ansible Playbook with the correct inventory
+      - name: Add VM to known_hosts
         run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i /home/secureadmin/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh-keygen -R "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" || true
+          ssh-keyscan -H "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> ~/.ssh/known_hosts
+
+      - name: Test SSH Connectivity
+        run: |
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
+
+      - name: Run Ansible Playbook
+        run: |
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             cd /home/secureadmin/ansible
             ansible-playbook -i hosts playbook.yml
           EOF
