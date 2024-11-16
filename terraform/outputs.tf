@@ -33,3 +33,15 @@ output "vm_private_ip" {
   value       = azurerm_network_interface.my_terraform_nic.ip_configuration[0].private_ip_address
   description = "L'adresse IP privée de la VM"
 }
+
+# Nom d'utilisateur pour la VM
+output "vm_username" {
+  value       = var.vm_username
+  description = "Le nom d'utilisateur pour la VM"
+}
+
+# Mot de passe pour la VM
+output "vm_password" {
+  value       = var.vm_password
+  description = "Le mot de passe pour la VM"
+}
