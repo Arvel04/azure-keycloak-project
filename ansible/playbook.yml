@@ -9,7 +9,7 @@
 
   tasks:
     - name: Check if Python 3 is installed
-      ansible.builtin.command: which python3
+      command: which python3
       register: python3_installed
       ignore_errors: true
 
@@ -20,7 +20,7 @@
       when: python3_installed.rc != 0
 
     - name: Check if pip for Python 3 is installed
-      ansible.builtin.command: which pip3
+      command: which pip3
       register: pip3_installed
       ignore_errors: true
 
@@ -31,7 +31,7 @@
       when: pip3_installed.rc != 0
 
     - name: Check if Ansible is installed
-      ansible.builtin.command: ansible --version
+      command: ansible --version
       register: ansible_installed
       ignore_errors: true
 
@@ -43,8 +43,7 @@
       when: ansible_installed.rc != 0
 
     - name: Ensure Ansible version is correct
-      ansible.builtin.command:
-        cmd: "ansible --version"
+      command: ansible --version
       register: ansible_version_output
       changed_when: false
 
