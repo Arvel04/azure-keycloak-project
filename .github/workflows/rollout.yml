@@ -75,15 +75,18 @@ jobs:
             sudo apt remove --purge python3-venv ansible -y || true
             sudo apt autoremove -y
             sudo apt install -y python2.7 python-pip
-            pip install ansible==2.9.0
+            pip install --user ansible==2.9.0
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
             source ~/.bashrc
+            which ansible-playbook
+            ansible-playbook --version
           EOF
 
       - name: Verify Ansible Installation
         run: |
           ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             source ~/.bashrc
+            which ansible-playbook
             ansible-playbook --version
           EOF
 
@@ -98,16 +101,4 @@ jobs:
 
       - name: Copy Ansible Playbook and Roles
         run: |
-          scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa -r $GITHUB_WORKSPACE/ansible/playbook.yml secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible/
-          scp -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa -r $GITHUB_WORKSPACE/ansible/roles secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):~/ansible/
-
-      - name: Check Files on VM
-        run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
-            ls -l ~/ansible
-            cat ~/ansible/hosts
-            cat ~/ansible/playbook.yml
-          EOF
-
-      - name: Run Ansible Playbook
-        run: ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) ansible-playbook ~/ansible/playbook.yml
+          scp -o "StrictHost
