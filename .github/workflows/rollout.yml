@@ -1,8 +1,9 @@
 name: Rollout
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Configure"]
+    types:
+      - completed
 
 jobs:
   rollout:
@@ -15,12 +16,11 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1
 
-      - name: Authenticate with Azure
+      - name: Authenticate with Azure CLI
         run: |
-          echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
+          echo "${{ secrets.AZURE_CREDENTIALS }}" > myAzureCredentials.json
+          az login --service-principal --username ${{ secrets.ARM_CLIENT_ID }} --password ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
+          az account set --subscription ${{ secrets.ARM_SUBSCRIPTION_ID }}
         working-directory: terraform/
 
       - name: Initialize Terraform with Backend
@@ -28,7 +28,12 @@ jobs:
         working-directory: terraform/
 
       - name: Apply Terraform to create VM
-        run: terraform apply -auto-approve
+        run: |
+          terraform apply -auto-approve \
+            -var "client_id=${{ secrets.ARM_CLIENT_ID }}" \
+            -var "client_secret=${{ secrets.ARM_CLIENT_SECRET }}" \
+            -var "subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
+            -var "tenant_id=${{ secrets.ARM_TENANT_ID }}"
         working-directory: terraform/
         timeout-minutes: 30
 
@@ -41,12 +46,6 @@ jobs:
       
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
-
-      - name: Prepare SSH private key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ansible_rsa
-          chmod 600 ~/.ssh/id_ansible_rsa
 
       - name: Add VM to known_hosts
         run: |
