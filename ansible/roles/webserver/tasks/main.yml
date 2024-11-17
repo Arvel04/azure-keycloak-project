@@ -3,16 +3,18 @@
   apt:
     name: nginx
     state: present
+    update_cache: yes  # Met à jour le cache APT avant installation
 
-- name: Start Nginx service
+- name: Start and enable Nginx service
   service:
     name: nginx
     state: started
     enabled: yes
 
-- name: Wait for Nginx to be ready
+- name: Wait for Nginx to be ready on port 80
   wait_for:
-    host: "localhost"
+    host: "51.136.34.167"  # Adresse IP de la machine cible
     port: 80
     state: started
     delay: 10
+    timeout: 30  # Timeout après 30 secondes si le service ne répond pas
