@@ -14,12 +14,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Download VM IP artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: vm_ip
-          path: $GITHUB_WORKSPACE
-
       - name: Authenticate with Azure
         run: |
           echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
@@ -38,7 +32,7 @@ jobs:
 
       - name: Test SSH Connectivity
         run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@${{ env.VM_IP }} echo "SSH connectivity is working"
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@${{ env.VM_IP }} echo "SSH connectivity is working"
 
       - name: Copy Ansible Playbook and Roles
         run: |
@@ -46,7 +40,7 @@ jobs:
 
       - name: Run Ansible Playbook on Remote VM
         run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@${{ env.VM_IP }} << 'EOF'
+          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@${{ env.VM_IP }} << 'EOF'
             cd /home/secureadmin/ansible
             ansible-playbook -i hosts playbook.yml -vvvv
           EOF

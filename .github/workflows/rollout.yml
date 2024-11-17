@@ -39,12 +39,6 @@ jobs:
           echo "$VM_IP" > $GITHUB_WORKSPACE/vm_ip.txt
         working-directory: terraform/
       
-      - name: Upload VM IP as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: vm_ip
-          path: $GITHUB_WORKSPACE/vm_ip.txt
-      
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
