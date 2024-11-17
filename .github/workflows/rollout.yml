@@ -13,6 +13,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Authenticate with Azure CLI
+        run: |
+          echo "${{ secrets.AZURE_CREDENTIALS }}" > myAzureCredentials.json
+          az login --service-principal --username ${{ secrets.ARM_CLIENT_ID }} --password ${{ secrets.ARM_CLIENT_SECRET }} --tenant ${{ secrets.ARM_TENANT_ID }}
+          az account set --subscription ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        working-directory: terraform/
+
       - name: Initialize Terraform with Backend
         run: terraform init -backend-config="${GITHUB_WORKSPACE}/terraform/backend.tfvars"
         working-directory: terraform/
