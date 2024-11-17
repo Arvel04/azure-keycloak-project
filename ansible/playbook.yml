@@ -1,10 +1,13 @@
 ---
-- name: Configure VM and set up webserver
+- name: Test basic connection and commands
   hosts: 51.136.34.167
   become: true
   gather_facts: true
 
   tasks:
+    - name: Ping the host
+      ansible.builtin.ping:
+
     - name: Check presence of common role tasks
       stat:
         path: /home/secureadmin/ansible/roles/common/tasks/main.yml
@@ -150,18 +153,48 @@
       ansible.builtin.debug:
         var: ansible_version_output.stdout
 
-    - name: Include common role
-      ansible.builtin.include_role:
-        name: common
+    # Tâches du rôle commun incluses directement dans le playbook principal
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+      register: result_update_cache
+    - debug:
+        var: result_update_cache
 
-    - name: Include docker role
-      ansible.builtin.include_role:
+    - name: Install required packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+      register: result_install_packages
+    - debug:
+        var: result_install_packages
+
+    - name: Install Docker
+      apt:
+        name: docker.io
+        state: present
+      register: result_install_docker
+    - debug:
+        var: result_install_docker
+
+    - name: Add Docker group
+      group:
         name: docker
+        state: present
+      register: result_add_group
+    - debug:
+        var: result_add_group
 
-    - name: Include keycloak role
-      ansible.builtin.include_role:
-        name: keycloak
-
-    - name: Include webserver role
-      ansible.builtin.include_role:
-        name: webserver
+    - name: Add user to Docker group
+      user:
+        name: "{{ ansible_user }}"
+        group: docker
+        append: yes
+      register: result_add_user_to_group
+    - debug:
+        var: result_add_user_to_group
