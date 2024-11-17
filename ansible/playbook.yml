@@ -2,8 +2,25 @@
   hosts: 51.136.34.167
   become: true
   gather_facts: true
+  vars_files:
+    - vars.yml
 
   tasks:
+    - name: Ensure pip is installed
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install Docker SDK for Python
+      pip:
+        name: docker
+        state: present
+      register: docker_sdk_install
+
+    - name: Show Docker SDK installation result
+      debug:
+        var: docker_sdk_install
+
     - name: Ping the host
       ansible.builtin.ping:
 
@@ -11,6 +28,8 @@
   hosts: all
   become: true
   gather_facts: true
+  vars_files:
+    - vars.yml
 
   roles:
     - common
@@ -18,6 +37,8 @@
 - name: Configure Docker
   hosts: all
   become: true
+  vars_files:
+    - vars.yml
 
   roles:
     - docker
@@ -25,6 +46,8 @@
 - name: Configure Keycloak
   hosts: all
   become: true
+  vars_files:
+    - vars.yml
 
   roles:
     - keycloak
@@ -32,6 +55,8 @@
 - name: Configure Nginx
   hosts: webservers
   become: true
+  vars_files:
+    - vars.yml
 
   roles:
     - webserver
