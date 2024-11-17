@@ -14,18 +14,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Authenticate with Azure
+        run: |
+          echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
+        working-directory: terraform/
+
       - name: Set up SSH Key and VM IP from Rollout Outputs
         run: |
-          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          echo "VM_IP=${VM_IP}" >> $GITHUB_ENV
+          echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
-          ssh-keyscan -H "${VM_IP}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ env.VM_IP }}" >> ~/.ssh/known_hosts
 
       - name: Test SSH Connectivity
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@${{ env.VM_IP }} echo "SSH connectivity is working"
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@${{ env.VM_IP }} echo "SSH connectivity is working"
 
       - name: Copy Ansible Playbook and Roles
         run: |
@@ -33,8 +40,7 @@ jobs:
 
       - name: Run Ansible Playbook on Remote VM
         run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@${{ env.VM_IP }} << 'EOF'
-            source ~/ansible-env/bin/activate
-            ansible -i ~/ansible/hosts webserver -m ping -vvv
-            ansible-playbook -vvv -i ~/ansible/hosts ~/ansible/playbook.yml
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@${{ env.VM_IP }} << 'EOF'
+            cd /home/secureadmin/ansible
+            ansible-playbook -i hosts playbook.yml -vvvv
           EOF
