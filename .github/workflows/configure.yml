@@ -1,10 +1,12 @@
 name: Configure
 
 on:
-  workflow_run:
-    workflows: ["Rollout"]
-    types:
-      - completed
+  push:
+    branches:
+      - main  # Déclenche ce workflow lors d'un push sur la branche principale
+  pull_request:
+    branches:
+      - main  # Déclenche ce workflow lors d'un pull request vers la branche principale
 
 jobs:
   configure:
@@ -24,23 +26,19 @@ jobs:
 
       - name: Set up SSH Key and VM IP from Rollout Outputs
         run: |
+          # Récupérer l'adresse IP de la VM créée dans le workflow Rollout
           echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
+          
+          # Préparer la clé SSH
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
+          
+          # Ajouter l'IP de la VM aux known_hosts pour éviter un avertissement SSH
           ssh-keyscan -H "${{ env.VM_IP }}" >> ~/.ssh/known_hosts
 
       - name: Test SSH Connectivity
         run: |
+          # Tester la connectivité SSH pour s'assurer que l'IP est correcte et accessible
           ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@${{ env.VM_IP }} echo "SSH connectivity is working"
-
-      - name: Copy Ansible Playbook and Roles
-        run: |
-          scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -r $GITHUB_WORKSPACE/ansible secureadmin@${{ env.VM_IP }}:~/ansible
-
-      - name: Run Ansible Playbook on Remote VM
-        run: |
-          ssh -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no secureadmin@${{ env.VM_IP }} << 'EOF'
-            cd /home/secureadmin/ansible
-            ansible-playbook -i hosts playbook.yml -vvvv
-          EOF
+          
