@@ -42,17 +42,16 @@ jobs:
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
 
-      - name: Prepare SSH keys and known_hosts file
+      - name: Prepare SSH private key
         run: |
           mkdir -p ~/.ssh
-          touch ~/.ssh/known_hosts
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
 
       - name: Add VM to known_hosts
         run: |
-          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
-          grep -q "$VM_IP" ~/.ssh/known_hosts || ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
+          ssh-keygen -R "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" || true
+          ssh-keyscan -H "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> ~/.ssh/known_hosts
 
       - name: Test SSH Connectivity
         run: |
