@@ -51,8 +51,8 @@ jobs:
 
       - name: Add VM to known_hosts
         run: |
-          ssh-keygen -R "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" || true
-          ssh-keyscan -H "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> ~/.ssh/known_hosts
+          VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)
+          grep -q "$VM_IP" ~/.ssh/known_hosts || ssh-keyscan -H "$VM_IP" >> ~/.ssh/known_hosts
 
       - name: Test SSH Connectivity
         run: |
