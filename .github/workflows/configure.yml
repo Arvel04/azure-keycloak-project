@@ -14,6 +14,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Download VM IP artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: vm_ip
+          path: $GITHUB_WORKSPACE
+
       - name: Authenticate with Azure
         run: |
           echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
