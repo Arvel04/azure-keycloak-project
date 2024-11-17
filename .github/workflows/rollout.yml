@@ -40,7 +40,7 @@ jobs:
         working-directory: terraform/
       
       - name: Upload VM IP as artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: vm_ip
           path: $GITHUB_WORKSPACE/vm_ip.txt
