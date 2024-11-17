@@ -2,6 +2,9 @@
 - name: Update apt cache
   apt:
     update_cache: yes
+  register: result_update_cache
+- debug:
+    var: result_update_cache
 
 - name: Install required packages
   apt:
@@ -12,19 +15,31 @@
       - gnupg
       - lsb-release
     state: present
+  register: result_install_packages
+- debug:
+    var: result_install_packages
 
 - name: Install Docker
   apt:
     name: docker.io
     state: present
+  register: result_install_docker
+- debug:
+    var: result_install_docker
 
 - name: Add Docker group
   group:
     name: docker
     state: present
+  register: result_add_group
+- debug:
+    var: result_add_group
 
 - name: Add user to Docker group
   user:
     name: "{{ ansible_user }}"
     group: docker
     append: yes
+  register: result_add_user_to_group
+- debug:
+    var: result_add_user_to_group

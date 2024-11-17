@@ -1,10 +1,46 @@
 ---
 - name: Configure VM and set up webserver
-  hosts: localhost
+  hosts: 51.136.34.167
   become: true
   gather_facts: true
 
   tasks:
+    - name: Check presence of common role tasks
+      stat:
+        path: /home/secureadmin/ansible/roles/common/tasks/main.yml
+      register: common_role
+
+    - name: Debug common role presence
+      debug:
+        msg: "Common role main.yml found: {{ common_role.stat.exists }}"
+
+    - name: Check presence of docker role tasks
+      stat:
+        path: /home/secureadmin/ansible/roles/docker/tasks/main.yml
+      register: docker_role
+
+    - name: Debug docker role presence
+      debug:
+        msg: "Docker role main.yml found: {{ docker_role.stat.exists }}"
+
+    - name: Check presence of keycloak role tasks
+      stat:
+        path: /home/secureadmin/ansible/roles/keycloak/tasks/main.yml
+      register: keycloak_role
+
+    - name: Debug keycloak role presence
+      debug:
+        msg: "Keycloak role main.yml found: {{ keycloak_role.stat.exists }}"
+
+    - name: Check presence of webserver role tasks
+      stat:
+        path: /home/secureadmin/ansible/roles/webserver/tasks/main.yml
+      register: webserver_role
+
+    - name: Debug webserver role presence
+      debug:
+        msg: "Webserver role main.yml found: {{ webserver_role.stat.exists }}"
+
     - name: Ensure permissions for ansible directory
       ansible.builtin.file:
         path: /home/secureadmin/ansible
