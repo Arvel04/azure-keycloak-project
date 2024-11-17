@@ -4,16 +4,15 @@
     name: python3-pip
     state: present
 
-- name: Install Docker SDK for Python
-  pip:
-    name: docker
-    state: present
-  register: docker_sdk_install
-  no_log: false  # Désactiver temporairement no_log
+- name: Install Docker SDK for Python using raw command
+  raw: |
+    pip3 install docker
+  register: docker_sdk_install_raw
+  ignore_errors: yes
 
-- name: Show Docker SDK installation result
+- name: Show Docker SDK installation result from raw command
   debug:
-    var: docker_sdk_install
+    var: docker_sdk_install_raw
 
 - name: Create Docker network
   docker_network:
