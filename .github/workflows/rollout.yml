@@ -1,8 +1,9 @@
 name: Rollout
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Configure"]
+    types:
+      - completed
 
 jobs:
   rollout:
@@ -11,17 +12,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1
-
-      - name: Authenticate with Azure
-        run: |
-          echo "ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}" >> $GITHUB_ENV
-        working-directory: terraform/
 
       - name: Initialize Terraform with Backend
         run: terraform init -backend-config="${GITHUB_WORKSPACE}/terraform/backend.tfvars"
@@ -41,12 +31,6 @@ jobs:
       
       - name: Export VM IP to environment file
         run: echo "VM_IP=$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> $GITHUB_ENV
-
-      - name: Prepare SSH private key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ansible_rsa
-          chmod 600 ~/.ssh/id_ansible_rsa
 
       - name: Add VM to known_hosts
         run: |
