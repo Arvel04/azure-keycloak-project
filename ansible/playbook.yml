@@ -1,5 +1,5 @@
 - name: Configure VM and set up services
-  hosts: all
+  hosts: webserver
   become: true
   gather_facts: true
   vars_files:
