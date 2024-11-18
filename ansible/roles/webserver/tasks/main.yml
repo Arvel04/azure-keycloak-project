@@ -13,7 +13,7 @@
 
 - name: Wait for Nginx to be ready on port 80
   wait_for:
-    host: "51.136.34.167"  # Adresse IP de la machine cible
+    host: "52.166.232.202"  # Adresse IP de la machine cible
     port: 80
     state: started
     delay: 10
