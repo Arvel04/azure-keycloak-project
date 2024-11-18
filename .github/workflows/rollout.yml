@@ -65,7 +65,7 @@ jobs:
       - name: Transfer project files to VM
         run: |
           scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./ansible ./terraform secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/
-          scp -v -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ./ansible/vars.yml secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/ansible/vars.yml
+          scp -v -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $GITHUB_WORKSPACE/ansible/vars.yml secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/ansible/vars.yml
           
       - name: Run Ansible Playbook
         run: |
