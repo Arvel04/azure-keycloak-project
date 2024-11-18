@@ -20,9 +20,3 @@
     owner: www-data
     group: www-data
     mode: '0755'
-
-handlers:
-- name: Restart Nginx
-  service:
-    name: nginx
-    state: restarted
