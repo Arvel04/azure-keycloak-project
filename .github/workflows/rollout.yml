@@ -77,6 +77,7 @@ jobs:
       - name: Ensure ansible.cfg is configured
         run: |
           ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << EOF
+            sudo mkdir -p /etc/ansible
             echo -e "[defaults]\nlibrary = /usr/local/lib/python3.8/dist-packages/ansible/plugins\nmodule_utils = /usr/local/lib/python3.8/dist-packages/ansible/module_utils" | sudo tee /etc/ansible/ansible.cfg
           EOF
 
