@@ -1,5 +1,5 @@
 - name: Configure VM and set up services
-  hosts: webserver
+  hosts: 52.166.232.202
   become: true
   gather_facts: true
   vars_files:
