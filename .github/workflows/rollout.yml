@@ -48,42 +48,24 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ansible_rsa
           chmod 600 ~/.ssh/id_ansible_rsa
-
       - name: Add VM to known_hosts
         run: |
           ssh-keygen -R "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" || true
           ssh-keyscan -H "$(cat $GITHUB_WORKSPACE/vm_ip.txt)" >> ~/.ssh/known_hosts
-
       - name: Test SSH Connectivity
         run: |
           ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
-
+      - name: Install Python and pip on VM
+        run: |
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) sudo apt-get update && sudo apt-get install -y python3 python3-pip
       - name: Transfer project files to VM
         run: |
           scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./ansible ./terraform secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/
           scp -v -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $GITHUB_WORKSPACE/ansible/vars.yml secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/ansible/vars.yml
-
-      - name: Ensure apt_pkg is accessible
-        run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << EOF
-            sudo apt-get install -y python3-apt
-            sudo rm /usr/local/lib/python3.8/dist-packages/apt_pkg.so
-            sudo mkdir -p /usr/lib/python3.8/dist-packages
-            sudo ln -sf /usr/lib/python3/dist-packages/apt_pkg.cpython-36m-x86_64-linux-gnu.so /usr/local/lib/python3.8/dist-packages/apt_pkg.so
-            sudo ln -sf /usr/lib/python3/dist-packages/apt_pkg.cpython-36m-x86_64-linux-gnu.so /usr/lib/python3.8/dist-packages/apt_pkg.so
-            python3 -c "import apt_pkg"
-          EOF
-
-      - name: Ensure ansible.cfg is configured
-        run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << EOF
-            sudo mkdir -p /etc/ansible
-            echo -e "[defaults]\nlibrary = /usr/local/lib/python3.8/dist-packages/ansible/plugins\nmodule_utils = /usr/local/lib/python3.8/dist-packages/ansible/module_utils" | sudo tee /etc/ansible/ansible.cfg
-          EOF
-
+          
       - name: Run Ansible Playbook
         run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << EOF
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             cd /home/secureadmin/ansible
-            ansible-playbook -i /home/secureadmin/ansible/hosts playbook.yml
+            ANSIBLE_DEBUG=1 ansible-playbook -vvv playbook.yml
           EOF
