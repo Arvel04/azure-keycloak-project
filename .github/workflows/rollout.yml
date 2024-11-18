@@ -67,5 +67,5 @@ jobs:
         run: |
           ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             cd /home/secureadmin/ansible
-            ansible-playbook -i /home/secureadmin/ansible/hosts /home/secureadmin/ansible/playbook.yml
+            ANSIBLE_DEBUG=1 ansible-playbook -vvv -i '52.166.232.202,' playbook.yml -u secureadmin --private-key=/home/secureadmin/.ssh/id_ansible_rsa
           EOF
