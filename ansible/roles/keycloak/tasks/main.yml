@@ -1,7 +1,7 @@
 ---
 - name: Wait for PostgreSQL to be ready
   wait_for:
-    host: "52.166.232.202"
+    host: "webserver"
     port: 5432
     state: started
     delay: 10

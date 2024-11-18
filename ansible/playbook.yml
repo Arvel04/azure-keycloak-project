@@ -1,5 +1,5 @@
 - name: Configure VM and set up services
-  hosts: 52.166.232.202
+  hosts: webserver
   become: true
   gather_facts: true
   vars_files:
@@ -25,7 +25,7 @@
       ansible.builtin.ping:
 
 - name: Configure common settings
-  hosts: all
+  hosts: webserver
   become: true
   gather_facts: true
   vars_files:
@@ -40,7 +40,7 @@
         msg: "Applying common settings"
 
 - name: Configure Docker
-  hosts: all
+  hosts: webserver
   become: true
   gather_facts: true
   vars_files:
@@ -55,7 +55,7 @@
         msg: "Configuring Docker"
 
 - name: Configure Keycloak
-  hosts: all
+  hosts: webserver
   become: true
   gather_facts: true
   vars_files:
@@ -70,7 +70,7 @@
         msg: "Configuring Keycloak"
 
 - name: Configure Nginx
-  hosts: all
+  hosts: webserver
   become: true
   gather_facts: true
   vars_files:

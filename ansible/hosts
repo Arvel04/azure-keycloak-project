@@ -1,2 +1,2 @@
 [webserver]
-52.166.232.202 ansible_user=secureadmin ansible_ssh_private_key_file=/home/secureadmin/.ssh/id_ansible_rsa ansible_python_interpreter=/usr/bin/python3
+52.166.232.202 ansible_user=secureadmin ansible_ssh_private_key_file=/home/secureadmin/.ssh/id_ansible_rsa
