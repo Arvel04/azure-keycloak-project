@@ -1,20 +1,22 @@
----
 - name: Ensure Nginx is installed
   apt:
     name: nginx
     state: present
-    update_cache: yes  # Met à jour le cache APT avant installation
 
-- name: Start and enable Nginx service
-  service:
-    name: nginx
-    state: started
-    enabled: yes
+- name: Deploy Nginx configuration file
+  template:
+    src: "{{ nginx_config_file }}"
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - Restart Nginx
 
-- name: Wait for Nginx to be ready on port 80
-  wait_for:
-    host: "52.166.232.202"  # Adresse IP de la machine cible
-    port: 80
-    state: started
-    delay: 10
-    timeout: 30  # Timeout après 30 secondes si le service ne répond pas
+- name: Ensure Nginx static directory exists
+  file:
+    path: "{{ nginx_static_dir }}"
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: '0755'

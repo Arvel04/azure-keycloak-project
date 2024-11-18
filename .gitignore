@@ -11,7 +11,7 @@ terraform.lock.hcl
 secrets.yml
 
 # Variables files
-vars.yml
+#vars.yml
 
 # SSH keys
 ~/.ssh/id_ansible_rsa
