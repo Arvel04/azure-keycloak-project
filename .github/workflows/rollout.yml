@@ -93,5 +93,5 @@ jobs:
         run: |
           ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
             cd /home/secureadmin/ansible
-            ANSIBLE_DEBUG=1 ansible-playbook -vvv -i /home/secureadmin/ansible/hosts playbook.yml
+            ANSIBLE_DEBUG=1 ansible-playbook -vvv playbook.yml
           EOF
