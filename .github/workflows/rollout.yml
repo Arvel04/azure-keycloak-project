@@ -58,18 +58,14 @@ jobs:
         run: |
           ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) echo "SSH connectivity is working"
 
-      - name: Install Python and pip on VM
-        run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) sudo apt-get update && sudo apt-get install -y python3 python3-pip
-
       - name: Transfer project files to VM
         run: |
           scp -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r ./ansible ./terraform secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/
           scp -v -i ~/.ssh/id_ansible_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $GITHUB_WORKSPACE/ansible/vars.yml secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt):/home/secureadmin/ansible/vars.yml
-          
+
       - name: Run Ansible Playbook
         run: |
-          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << 'EOF'
+          ssh -o "StrictHostKeyChecking=no" -o "UserKnownHostsFile=/dev/null" -i ~/.ssh/id_ansible_rsa secureadmin@$(cat $GITHUB_WORKSPACE/vm_ip.txt) << EOF
             cd /home/secureadmin/ansible
             ansible-playbook -i /home/secureadmin/ansible/hosts playbook.yml
           EOF
