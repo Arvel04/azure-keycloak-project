@@ -1,0 +1,27 @@
+# PostgreSQL configuration
+postgres_db: keycloak
+postgres_user: keycloak
+postgres_password: "{{ lookup('env', 'POSTGRES_PASSWORD') }}"  # Utilisation d'une variable d'environnement
+
+# Keycloak configuration
+keycloak_db_vendor: postgres
+keycloak_db_addr: "postgres"
+keycloak_db_database: keycloak
+keycloak_db_user: keycloak
+keycloak_db_password: "{{ lookup('env', 'KEYCLOAK_DB_PASSWORD') }}"  # Utilisation d'une variable d'environnement
+keycloak_realm: "myrealm"
+keycloak_client_id: "nginx-client"
+keycloak_client_secret: "{{ lookup('env', 'KEYCLOAK_CLIENT_SECRET') }}"  # Utilisation d'une variable d'environnement
+
+# Docker network configuration
+docker_network: "keycloak_network"
+
+# Nginx configuration
+nginx_config_file: "./nginx.conf"
+nginx_static_dir: "./static"
+
+# SSH Key Configuration
+ssh_key_file: "~/.ssh/id_ansible_rsa"
+
+# VM Configuration
+vm_ip: "{{ lookup('env', 'VM_IP') }}"  # Variable d'environnement pour l'IP de la VM
