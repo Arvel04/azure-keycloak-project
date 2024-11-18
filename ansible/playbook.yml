@@ -10,12 +10,14 @@
       apt:
         name: python3-pip
         state: present
+      no_log: true
 
     - name: Install Docker SDK for Python
       pip:
         name: docker
         state: present
       register: docker_sdk_install
+      no_log: true
 
     - name: Show Docker SDK installation result
       debug:
@@ -34,27 +36,45 @@
   roles:
     - common
 
+  tasks:
+    - name: Ensure common settings are applied
+      debug:
+        msg: "Applying common settings"
+
 - name: Configure Docker
   hosts: all
   become: true
+  gather_facts: true
   vars_files:
     - vars.yml
 
   roles:
     - docker
 
+  tasks:
+    - name: Ensure Docker is configured
+      debug:
+        msg: "Configuring Docker"
+
 - name: Configure Keycloak
   hosts: all
   become: true
+  gather_facts: true
   vars_files:
     - vars.yml
 
   roles:
     - keycloak
 
+  tasks:
+    - name: Ensure Keycloak is configured
+      debug:
+        msg: "Configuring Keycloak"
+
 - name: Configure Nginx
   hosts: webservers
   become: true
+  gather_facts: true
   vars_files:
     - vars.yml
 
@@ -66,6 +86,7 @@
       stat:
         path: /home/secureadmin/ansible/roles/common/tasks/main.yml
       register: common_role
+      no_log: true
 
     - name: Debug common role presence
       debug:
@@ -75,6 +96,7 @@
       stat:
         path: /home/secureadmin/ansible/roles/docker/tasks/main.yml
       register: docker_role
+      no_log: true
 
     - name: Debug docker role presence
       debug:
@@ -84,6 +106,7 @@
       stat:
         path: /home/secureadmin/ansible/roles/keycloak/tasks/main.yml
       register: keycloak_role
+      no_log: true
 
     - name: Debug keycloak role presence
       debug:
@@ -93,6 +116,7 @@
       stat:
         path: /home/secureadmin/ansible/roles/webserver/tasks/main.yml
       register: webserver_role
+      no_log: true
 
     - name: Debug webserver role presence
       debug:
