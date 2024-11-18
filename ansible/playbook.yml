@@ -70,7 +70,7 @@
         msg: "Configuring Keycloak"
 
 - name: Configure Nginx
-  hosts: webservers
+  hosts: webserver
   become: true
   gather_facts: true
   vars_files:
